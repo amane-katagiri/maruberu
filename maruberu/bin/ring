@@ -1,0 +1,5 @@
+#!/bin/bash -Ceu
+USD_RELAY_ID=1
+hidusb-relay-cmd on $USD_RELAY_ID
+python -c "__import__('time').sleep($1 / 1000)"
+hidusb-relay-cmd off $USD_RELAY_ID

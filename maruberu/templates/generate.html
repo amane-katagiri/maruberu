@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>maruberu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="canonical" href="https://maruberu.ama.ne.jp/admin/">
+</head>
+<body>
+  <h1>New Resource</h1>
+  <form action="/admin/" method="post">
+    <label>milliseconds : <input type="number" value=1000 step=1000 min=1000 name="milliseconds"></label>
+    <label>from : <input type="date" name="not_before_date"><input type="time" step=1 name="not_before_time"></label>
+    <label>to : <input type="date" name="not_after_date"><input type="time" step=1 name="not_after_time"></label>
+    <label>sticky : <input type="checkbox" name="sticky"></label>
+    <input type="submit" value="Create">
+  </form>
+</body>
+</html>
