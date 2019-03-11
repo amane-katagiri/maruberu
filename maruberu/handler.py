@@ -119,7 +119,8 @@ class AdminTokenHandler(BaseRequestHandler):
                 r = self.database.delete_resource(token)
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items, new_token=None, old_token=r.uuid)
-            except KeyError:
+            except KeyError as ex:
+                logging.warning(str(ex))
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items, new_token=None, old_token=None)
         else:
@@ -147,4 +148,5 @@ class AdminTokenHandler(BaseRequestHandler):
                 self.render("generate.html", items=items, new_token=r.uuid, old_token=None)
             except Exception as ex:
                 logging.warning(str(ex))
-                raise web.HTTPError(400)
+                items = self.database.get_all_resources()
+                self.render("generate.html", items=items, new_token=None, old_token=None)
