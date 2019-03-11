@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 import re
-from typing import Callable, Optional, Union
+from typing import Callable, List, Optional, Union
 import uuid
 
 import pytz
@@ -198,7 +198,16 @@ class BaseStorage(object):
     def get_resource_context(self, key: str) -> BaseContext:
         raise NotImplementedError
 
+    def get_all_resources(self,
+                          cond: Optional[List]=None,
+                          start_key: Optional[str]=None,
+                          limit: Optional[int]=None) -> List[BellResource]:
+        raise NotImplementedError
+
     def create_resource(self, obj: BellResource) -> None:
+        raise NotImplementedError
+
+    def delete_resource(self, key: str) -> BellResource:
         raise NotImplementedError
 
 

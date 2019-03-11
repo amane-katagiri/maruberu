@@ -90,9 +90,29 @@ class MemoryStorage(BaseStorage):
         else:
             return MemoryContext(None)
 
+    def get_all_resources(self,
+                          cond: Optional[List]=None,
+                          start_key: Optional[str]=None,
+                          limit: Optional[int]=None) -> List[BellResource]:
+        if start_key is not None and start_key not in memory_storage_resource:
+            raise KeyError
+        return [memory_storage_resource[x] for x in memory_storage_resource.keys()
+                if start_key is None or memory_storage_resource[x].created_at >=
+                memory_storage_resource[start_key].created_at][:limit]
+
     def create_resource(self, obj: BellResource) -> None:
         if obj.uuid in memory_storage_resource:
             raise ValueError
         else:
             memory_storage_resource[obj.uuid] = copy.deepcopy(obj)
             memory_storage_lock[obj.uuid] = Lock()
+
+    def delete_resource(self, key: str) -> BellResource:
+        if key not in memory_storage_resource:
+            raise KeyError
+        else:
+            r = copy.deepcopy(memory_storage_resource[key])
+            memory_storage_lock[key].acquire()
+            del memory_storage_resource[key]
+            memory_storage_lock[key].release()
+            return r
