@@ -33,6 +33,10 @@
   }
   td.action {
     border-right: solid 2px;
+    white-space: nowrap;
+  }
+  td.action form {
+    display: inline;
   }
   td.action input[type="submit"] {
     background-color: transparent;
@@ -68,12 +72,19 @@
       <tr>
         <td class="id"><a href="/resource/{{ x.uuid }}">{{ x.uuid }}</a></td>
         <td class="action">
-          <form method="post">
+          <form method="get" action="/">
+            <input type="hidden" name="token" value="{{ x.uuid }}">
+            <input type="submit" value="🔗" title="share">
+          </form>
+          <form method="post" action="/resource/{{ x.uuid }}/">
+            {% module xsrf_form_html() %}
+            <input type="submit" value="🔔" title="ring">
+          </form>
+          <form method="post" action="/admin/">
             {% module xsrf_form_html() %}
             <input type="hidden" name="token" value="{{ x.uuid }}">
             <input type="hidden" name="action" value="delete">
-            <input type="submit" value="🔔" formaction="/resource/{{ x.uuid }}/">
-            <input type="submit" value="❌" formaction="/admin/">
+            <input type="submit" value="❌" title="delete">
           </form>
         </td>
         <td>{{ x._status.name }}</td>
