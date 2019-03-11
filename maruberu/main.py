@@ -36,6 +36,7 @@ def main():
     options.parse_command_line()
 
     settings = {
+        "xsrf_cookies": True,
         "cookie_secret": options.cookie_secret,
         "static_path": pathlib.Path(__file__).parent / "static",
         "template_path": pathlib.Path(__file__).parent / "templates",

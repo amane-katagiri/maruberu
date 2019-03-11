@@ -6,13 +6,26 @@
   <title>maruberu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="canonical" href="https://maruberu.ama.ne.jp/admin/login/">
+  <style>
+  form div.params {
+    margin: 1em 0;
+    padding: 0 1em;
+    border: dotted 1px;
+  }
+  form div.params div {
+    margin: 1em 0;
+  }
+  </style>
 </head>
 <body>
-  <h1>Login</h1>
+  <h1>Admin</h1>
+  <h2>Login</h2>
   <form action="/admin/login/" method="post">
-    <label>username : <input type="text" name="username"></label>
-    <label>password : <input type="password" name="password"></label>
-    <input type="submit" value="Login">
+    <div class="params">
+      <div><label>username : <input type="text" name="username"></label></div>
+      <div><label>password : <input type="password" name="password"></label></div>
+    </div>
+    <div><input type="submit" value="Login"></div>
   </form>
 </body>
 </html>

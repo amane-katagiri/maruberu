@@ -10,7 +10,13 @@
 <body>
   <h1>Ring</h1>
   <form action="/resource/{{ token }}/" method="post">
+    {% module xsrf_form_html() %}
     <input type="submit" value="Ring">
+  </form>
+  <form action="/resource/{{ token }}/" method="post">
+    {% module xsrf_form_html() %}
+    <input type="hidden" name="action" value="delete">
+    <input type="submit" value="Delete">
   </form>
 </body>
 </html>
