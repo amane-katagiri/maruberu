@@ -21,6 +21,7 @@
   <h1>Admin</h1>
   <h2>Login</h2>
   <form action="/admin/login/" method="post">
+    {% module xsrf_form_html() %}
     <div class="params">
       <div><label>username : <input type="text" name="username"></label></div>
       <div><label>password : <input type="password" name="password"></label></div>
