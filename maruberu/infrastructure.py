@@ -48,7 +48,8 @@ class MaruBell(BaseBell):
             self._ring_queue.task_done()
 
 
-memory_storage: Dict[str, Tuple[BellResource, Lock]] = defaultdict(dict)
+memory_storage_resource: Dict[str, BellResource] = dict()
+memory_storage_lock: Dict[str, Lock] = dict()
 
 
 class MemoryContext(BaseContext):
@@ -64,7 +65,7 @@ class MemoryContext(BaseContext):
         if self._lock:
             self.resource.clear_validation_cache()
             if not ex:
-                memory_storage[self.resource.uuid][0] = self.resource
+                memory_storage_resource[self.resource.uuid] = self.resource
             self._lock.release()
         return not ex
 
@@ -77,15 +78,21 @@ class MemoryStorage(BaseStorage):
             self.create_resource(r)
 
     def get_resource_context(self, key: str) -> MemoryContext:
-        row = memory_storage.get(key)
-        if row:
-            row[1].acquire()
-            return MemoryContext(copy.deepcopy(row[0]), row[1])
+        lock = memory_storage_lock.get(key)
+        if lock:
+            lock.acquire()
+            resource = memory_storage_resource.get(key)
+            if resource:
+                return MemoryContext(copy.deepcopy(resource), lock)
+            else:
+                lock.release()
+                return MemoryContext(None)
         else:
             return MemoryContext(None)
 
     def create_resource(self, obj: BellResource) -> None:
-        if obj.uuid in memory_storage:
+        if obj.uuid in memory_storage_resource:
             raise ValueError
         else:
-            memory_storage[obj.uuid] = [obj, Lock()]
+            memory_storage_resource[obj.uuid] = copy.deepcopy(obj)
+            memory_storage_lock[obj.uuid] = Lock()
