@@ -99,6 +99,7 @@ class AdminLoginHandler(BaseRequestHandler):
 
 
 class AdminLogoutHandler(BaseRequestHandler):
+    @web.authenticated
     def get(self) -> None:
         self.clear_current_user()
         self.redirect("/admin/login/")
