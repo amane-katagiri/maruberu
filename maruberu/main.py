@@ -10,7 +10,7 @@ from tornado.options import define
 from tornado.options import options
 
 from .env import get_env
-from .handler import AdminLoginHandler, AdminLogoutHandler, GenerateTokenHandler
+from .handler import AdminLoginHandler, AdminLogoutHandler, AdminTokenHandler
 from .handler import IndexHandler, ResourceHandler
 from .models import DataBaseAddress
 
@@ -46,7 +46,7 @@ def main():
     app = web.Application([
         (r"/", IndexHandler, get_env(options.env)),
         (r"/resource/([0-9a-f-]+)/?", ResourceHandler, get_env(options.env)),
-        (r"/admin/?", GenerateTokenHandler, get_env(options.env)),
+        (r"/admin/?", AdminTokenHandler, get_env(options.env)),
         (r"/admin/login/?", AdminLoginHandler, get_env(options.env)),
         (r"/admin/logout/?", AdminLogoutHandler, get_env(options.env)),
     ], **settings)

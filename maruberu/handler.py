@@ -23,10 +23,10 @@ class BaseRequestHandler(web.RequestHandler):
         else:
             return escape.utf8(username)
 
-    def set_current_user(self, username):
+    def set_current_user(self, username) -> None:
         self.set_secure_cookie(self.cookie_username, escape.utf8(username))
 
-    def clear_current_user(self):
+    def clear_current_user(self) -> None:
         self.clear_cookie(self.cookie_username)
 
     def initialize(self, bell: BaseBell, database: BaseStorage) -> None:
@@ -35,7 +35,7 @@ class BaseRequestHandler(web.RequestHandler):
 
 
 class IndexHandler(BaseRequestHandler):
-    def get(self):
+    def get(self) -> None:
         token = self.get_argument("token", "")
         with self.database.get_resource_context(token) as c:
             resource = c.resource
@@ -78,10 +78,10 @@ class ResourceHandler(BaseRequestHandler):
 
 
 class AdminLoginHandler(BaseRequestHandler):
-    def get(self):
+    def get(self) -> None:
         self.render("login.html")
 
-    def post(self):
+    def post(self) -> None:
         username = self.get_argument("username")
         password = self.get_argument("password")
         if username == options.admin_username and password == options.admin_password:
@@ -92,12 +92,12 @@ class AdminLoginHandler(BaseRequestHandler):
 
 
 class AdminLogoutHandler(BaseRequestHandler):
-    def get(self):
+    def get(self) -> None:
         self.clear_current_user()
         self.redirect("/admin/login/")
 
 
-class GenerateTokenHandler(BaseRequestHandler):
+class AdminTokenHandler(BaseRequestHandler):
     @web.authenticated
     def get(self) -> None:
         self.render("generate.html")
