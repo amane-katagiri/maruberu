@@ -39,9 +39,8 @@ class IndexHandler(BaseRequestHandler):
         token = self.get_argument("token", "")
         with self.database.get_resource_context(token) as c:
             resource = c.resource
-        if resource is None:
-            raise web.HTTPError(404)
-        self.render("index.html", token=escape.url_escape(token))
+        self.render("index.html", token=escape.url_escape(token) if resource else "",
+                    resource=resource)
 
 
 class ResourceHandler(BaseRequestHandler):

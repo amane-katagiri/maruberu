@@ -6,17 +6,23 @@
   <title>maruberu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="canonical" href="https://maruberu.ama.ne.jp/">
+  <style>
+  form {
+    margin: 1em 0;
+  }
+  </style>
 </head>
 <body>
-  <h1>Ring</h1>
-  <form action="/resource/{{ token }}/" method="post">
+  <h1>maruberu</h1>
+  {% if token %}  <div>time: {{ resource.milliseconds }}ms
+    <div>lifetime: {% if resource.not_before or resource.not_after %}{% if resource.not_before %}{{ resource.not_before }} {% end if %}〜{% if resource.not_after %} {{ resource.not_after }}{% end if %}{% else %}-{% end if %}</div>
+  <div>option: {% if resource.sticky %}<span title="sticky">♻️</span>{% end if %}</div>
+  <form method="post">
     {% module xsrf_form_html() %}
-    <input type="submit" value="Ring">
+    <input formaction="/resource/{{ token }}/" type="submit" value="鳴らす">
+    <input formaction="/resource/{{ token }}/?action=delete" type="submit" value="捨てる">
   </form>
-  <form action="/resource/{{ token }}/" method="post">
-    {% module xsrf_form_html() %}
-    <input type="hidden" name="action" value="delete">
-    <input type="submit" value="Delete">
-  </form>
+  {% else %}  <div>Invalid token</div>
+{% end if %}
 </body>
 </html>
