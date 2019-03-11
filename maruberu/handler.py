@@ -59,22 +59,29 @@ class ResourceHandler(BaseRequestHandler):
         self._write_result(200 if resource is not None else 404, resource)
 
     def post(self, token) -> None:
-        with self.database.get_resource_context(token) as c:
-            resource = c.resource
+        if self.get_argument("action", "") == "delete":
             try:
-                resource.ring(self.bell)
-            except (ResourceBeforePeriodError, ResourceDisabledError):
-                self._write_result(403, resource)
-            except AttributeError:
-                self._write_result(404, resource)
-            except ResourceInUseError:
-                self._write_result(429, resource)
-            except ResourceBusyError:
-                self._write_result(503, resource, "ベルが混雑しています。")
-            except ResourceForbiddenError:
-                self._write_result(503, resource, "ベルを鳴らす準備ができていません。")
-            else:
-                self._write_result(202, resource)
+                r = self.database.delete_resource(token)
+                self._write_result(200, r)
+            except KeyError:
+                self._write_result(404, None)
+        else:
+            with self.database.get_resource_context(token) as c:
+                resource = c.resource
+                try:
+                    resource.ring(self.bell)
+                except (ResourceBeforePeriodError, ResourceDisabledError):
+                    self._write_result(403, resource)
+                except AttributeError:
+                    self._write_result(404, resource)
+                except ResourceInUseError:
+                    self._write_result(429, resource)
+                except ResourceBusyError:
+                    self._write_result(503, resource, "ベルが混雑しています。")
+                except ResourceForbiddenError:
+                    self._write_result(503, resource, "ベルを鳴らす準備ができていません。")
+                else:
+                    self._write_result(202, resource)
 
 
 class AdminLoginHandler(BaseRequestHandler):
@@ -100,28 +107,43 @@ class AdminLogoutHandler(BaseRequestHandler):
 class AdminTokenHandler(BaseRequestHandler):
     @web.authenticated
     def get(self) -> None:
-        self.render("generate.html")
+        items = self.database.get_all_resources()
+        self.render("generate.html", items=items, new_token=None, old_token=None)
 
     @web.authenticated
     def post(self) -> None:
-        milliseconds = self.get_argument("milliseconds")
-        not_before_date = self.get_argument("not_before_date")
-        not_before_time = self.get_argument("not_before_time") or "00:00:00"
-        not_after_date = self.get_argument("not_after_date")
-        not_after_time = self.get_argument("not_after_time") or "23:59:59"
-        sticky = self.get_argument("sticky", "off")
-        try:
-            if int(milliseconds) <= 0:
-                msg = "milliseconds must be positive int (actual: {})"
-                raise ValueError(msg.format(milliseconds))
-            r = BellResource(int(milliseconds),
-                             datetime.strptime("{} {}".format(not_before_date, not_before_time),
-                                               "%Y-%m-%d %H:%M:%S") if not_before_date else None,
-                             datetime.strptime("{} {}".format(not_after_date, not_after_time),
-                                               "%Y-%m-%d %H:%M:%S") if not_after_date else None,
-                             sticky == "on")
-            self.database.create_resource(r)
-            self.redirect("/?token=" + r.uuid)
-        except Exception as ex:
-            logging.warning(str(ex))
-            raise web.HTTPError(400)
+        if self.get_argument("action", "") == "delete":
+            try:
+                token = self.get_argument("token")
+                r = self.database.delete_resource(token)
+                items = self.database.get_all_resources()
+                self.render("generate.html", items=items, new_token=None, old_token=r.uuid)
+            except KeyError:
+                items = self.database.get_all_resources()
+                self.render("generate.html", items=items, new_token=None, old_token=None)
+        else:
+            milliseconds = self.get_argument("milliseconds")
+            not_before_date = self.get_argument("not_before_date")
+            not_before_time = self.get_argument("not_before_time") or "00:00:00"
+            not_after_date = self.get_argument("not_after_date")
+            not_after_time = self.get_argument("not_after_time") or "23:59:59"
+            sticky = self.get_argument("sticky", "")
+            try:
+                if int(milliseconds) <= 0:
+                    msg = "milliseconds must be positive int (actual: {})"
+                    raise ValueError(msg.format(milliseconds))
+                r = BellResource(int(milliseconds),
+                                 datetime.strptime("{} {}".format(not_before_date,
+                                                                  not_before_time),
+                                                   "%Y-%m-%d %H:%M:%S")
+                                 if not_before_date else None,
+                                 datetime.strptime("{} {}".format(not_after_date, not_after_time),
+                                                   "%Y-%m-%d %H:%M:%S")
+                                 if not_after_date else None,
+                                 bool(sticky))
+                self.database.create_resource(r)
+                items = self.database.get_all_resources()
+                self.render("generate.html", items=items, new_token=r.uuid, old_token=None)
+            except Exception as ex:
+                logging.warning(str(ex))
+                raise web.HTTPError(400)
