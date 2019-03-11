@@ -96,9 +96,9 @@ class MemoryStorage(BaseStorage):
                           limit: Optional[int]=None) -> List[BellResource]:
         if start_key is not None and start_key not in memory_storage_resource:
             raise KeyError
-        return [memory_storage_resource[x] for x in memory_storage_resource.keys()
-                if start_key is None or memory_storage_resource[x].created_at >=
-                memory_storage_resource[start_key].created_at][:limit]
+        return list(reversed([memory_storage_resource[x] for x in memory_storage_resource.keys()
+                              if start_key is None or memory_storage_resource[x].created_at >=
+                              memory_storage_resource[start_key].created_at][:limit]))
 
     def create_resource(self, obj: BellResource) -> None:
         if obj.uuid in memory_storage_resource:
