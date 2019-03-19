@@ -44,6 +44,9 @@ class IndexHandler(BaseRequestHandler):
 
 
 class ResourceHandler(BaseRequestHandler):
+    def check_xsrf_cookie(self):
+        pass
+
     def _write_result(self, code: int, resource: BellResource, reason: Optional[str]=None):
         self.set_status(code)
         self.set_header("Content-Type", "application/json; charset=UTF-8")
@@ -59,6 +62,7 @@ class ResourceHandler(BaseRequestHandler):
 
     def post(self, token) -> None:
         if self.get_argument("action", "") == "delete":
+            super().check_xsrf_cookie()
             try:
                 r = self.database.delete_resource(token)
                 self._write_result(200, r)
@@ -67,6 +71,8 @@ class ResourceHandler(BaseRequestHandler):
         else:
             with self.database.get_resource_context(token) as c:
                 resource = c.resource
+                if not resource.api:
+                    super().check_xsrf_cookie()
                 try:
                     resource.ring(self.bell)
                 except (ResourceBeforePeriodError, ResourceDisabledError):
@@ -129,6 +135,7 @@ class AdminTokenHandler(BaseRequestHandler):
             not_after_date = self.get_argument("not_after_date")
             not_after_time = self.get_argument("not_after_time") or "23:59:59"
             sticky = self.get_argument("sticky", "")
+            api = self.get_argument("api", "")
             try:
                 if int(milliseconds) <= 0:
                     msg = "milliseconds must be positive int (actual: {})"
@@ -141,7 +148,8 @@ class AdminTokenHandler(BaseRequestHandler):
                                  datetime.strptime("{} {}".format(not_after_date, not_after_time),
                                                    "%Y-%m-%d %H:%M:%S")
                                  if not_after_date else None,
-                                 bool(sticky))
+                                 bool(sticky),
+                                 bool(api))
                 self.database.create_resource(r)
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items, new_token=r.uuid, old_token=None)

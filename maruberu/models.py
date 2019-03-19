@@ -46,6 +46,7 @@ class BellResource(object):
     def __init__(self, milliseconds: int,
                  not_before: Optional[datetime], not_after: Optional[datetime],
                  sticky: bool=False,
+                 api: bool=False,
                  uuid: Union[str, Callable]=uuid.uuid4,
                  status: BellResourceStatus=BellResourceStatus.UNUSED) -> None:
         # on table
@@ -54,6 +55,7 @@ class BellResource(object):
         self.not_before: Optional[datetime] = not_before
         self.not_after: Optional[datetime] = not_after
         self.sticky: bool = sticky
+        self.api: bool = api
         self._status: BellResourceStatus = status
         self.created_at: datetime = datetime.now(pytz.utc)
         self.updated_at: datetime = datetime.now(pytz.utc)

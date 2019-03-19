@@ -57,7 +57,7 @@
       <div><label>milliseconds : <input type="number" value=1000 step=1000 min=1000 name="milliseconds"></label></div>
       <div><label>from : <input type="date" name="not_before_date"><input type="time" step=1 name="not_before_time"></label></div>
       <div><label>to : <input type="date" name="not_after_date"><input type="time" step=1 name="not_after_time"></label></div>
-      <div>option : <label><input type="checkbox" name="sticky">sticky</label></div>
+      <div>option : <label><input type="checkbox" name="sticky">sticky</label><label><input type="checkbox" name="api">api</label></div>
     </div>
     <div><input type="submit" value="Create"></div>
   </form>
@@ -88,7 +88,7 @@
           </form>
         </td>
         <td>{{ x._status.name }}</td>
-        <td>{{ x.milliseconds }}</td><td>{% if x.not_before %}{{ x.not_before }} {% end if %}{% if x.not_before or x.not_after %}〜{% else %}-{% end if %}{% if x.not_after %} {{ x.not_after }}{% end if %}</td><td>{% if x.sticky %}<span title="sticky">♻️</span>{% end if %}</td></tr>{% end for %}{% else %}{% end if %}
+        <td>{{ x.milliseconds }}</td><td>{% if x.not_before %}{{ x.not_before }} {% end if %}{% if x.not_before or x.not_after %}〜{% else %}-{% end if %}{% if x.not_after %} {{ x.not_after }}{% end if %}</td><td>{% if x.sticky %}<span title="sticky">♻️</span>{% end if %}{% if x.api %}<span title="api">🤖</span>{% end if %}</td></tr>{% end for %}{% else %}{% end if %}
     </tbody>
   </table>
   </body>
