@@ -70,7 +70,8 @@ class BellResource(object):
                    if buf["not_before"] is not None else None,
                    datetime.fromisoformat(buf["not_after"])
                    if buf["not_after"] is not None else None,
-                   bool(buf["sticky"]), uuid=str(buf["uuid"]),
+                   bool(buf["sticky"]), bool(buf["api"]),
+                   uuid=str(buf["uuid"]),
                    status=BellResourceStatus[buf["status"]])
 
     def to_dict(self) -> str:
@@ -79,6 +80,7 @@ class BellResource(object):
                "not_before": self.not_before.isoformat() if self.not_before is not None else None,
                "not_after": self.not_after.isoformat() if self.not_after is not None else None,
                "sticky": self.sticky,
+               "api": self.api,
                "status": self._status.name}
         return obj
 
