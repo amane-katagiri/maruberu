@@ -4,7 +4,7 @@ CMD [""]
 ENTRYPOINT ["maruberu"]
 WORKDIR /maruberu
 RUN apt update \
-  && apt install --no-install-recommends  libusb-0.1-4 \
+  && apt install --no-install-recommends libusb-0.1-4 \
   && apt clean
 COPY . /maruberu
 RUN pip install -e . \
