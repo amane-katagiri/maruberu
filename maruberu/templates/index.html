@@ -16,7 +16,7 @@
   <h1>maruberu</h1>
   {% if token %}  <div>time: {{ resource.milliseconds }}ms</div>
     <div>lifetime: {% if resource.not_before or resource.not_after %}{% if resource.not_before %}{{ resource.not_before }} {% end if %}〜{% if resource.not_after %} {{ resource.not_after }}{% end if %}{% else %}-{% end if %}</div>
-  <div>option: {% if resource.sticky %}<span title="sticky">♻️</span>{% end if %}</div>
+  <div>option: {% if resource.sticky %}<span title="sticky">♻️</span>{% end if %}{% if x.api %} <span title="api">🤖</span>{% end if %}</div>
   <form method="post">
     {% module xsrf_form_html() %}
     <input formaction="/resource/{{ token }}/" type="submit" value="鳴らす">
