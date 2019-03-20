@@ -36,11 +36,14 @@ class BaseRequestHandler(web.RequestHandler):
 
 class IndexHandler(BaseRequestHandler):
     def get(self) -> None:
-        token = self.get_argument("token", "")
-        with self.database.get_resource_context(token) as c:
-            resource = c.resource
-        self.render("index.html", token=escape.url_escape(token) if resource else "",
-                    resource=resource)
+        token = self.get_argument("token", None)
+        if token is not None:
+            with self.database.get_resource_context(token) as c:
+                resource = c.resource
+            self.render("index.html", token=escape.url_escape(token) if resource else "",
+                        resource=resource)
+        else:
+            self.render("ad.html")
 
 
 class ResourceHandler(BaseRequestHandler):
