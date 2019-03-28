@@ -24,7 +24,7 @@ except ImportError:
 
 def main() -> None:
     """Setup package after read meta information from files."""
-    long_description = "You can kick my chair."
+    long_description = "You can ring my round bell."
     if os.path.exists("README.rst"):
         with open("README.rst") as f:
             long_description = f.read()
