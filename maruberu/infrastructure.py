@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from collections import defaultdict
+"""Infrastracture module of maruberu."""
+
 import copy
 import logging
 from queue import Full, Queue
 import subprocess
 from threading import Lock, Thread
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from tornado.options import options
 
@@ -15,19 +16,24 @@ from .models import DataBaseAddress, ResourceBusyError
 
 
 class MaruBell(BaseBell):
-    def __init__(self, database: BaseStorage):
+    """Bell implementation with physical bell."""
+
+    def __init__(self, database: BaseStorage) -> None:
+        """Initialize with database."""
         super().__init__(database)
         self._ring_queue = Queue(1)
         self.worker_thread = Thread(target=self.worker)
         self.worker_thread.start()
 
-    def ring(self, resource: BellResource):
+    def ring(self, resource: BellResource) -> None:
+        """Add resource to queue."""
         try:
             self._ring_queue.put_nowait(resource)
         except Full:
             raise ResourceBusyError
 
-    def worker(self):
+    def worker(self) -> None:
+        """Ring bell and notify result to the resource."""
         while True:
             item = self._ring_queue.get()
             if item is None:
@@ -53,14 +59,19 @@ memory_storage_lock: Dict[str, Lock] = dict()
 
 
 class MemoryContext(BaseContext):
+    """With-statement context which processes MemoryStorage with specified resource."""
+
     def __init__(self, resource: BellResource, lock: Optional[Lock]=None) -> None:
+        """Initialize with BellResource and releasable lock."""
         super().__init__(resource)
         self._lock = lock
 
     def __enter__(self):
+        """Enter context with resource."""
         return self
 
     def __exit__(self, ex_type, ex_value, trace):
+        """Write back resource and release lock."""
         ex = ex_type or ex_value or trace
         if self._lock:
             self.resource.clear_validation_cache()
@@ -71,13 +82,17 @@ class MemoryContext(BaseContext):
 
 
 class MemoryStorage(BaseStorage):
+    """Database implementation with on-memory dict."""
+
     def __init__(self, addr: DataBaseAddress,
                  initial_resource_list: Optional[List[BellResource]]=None) -> None:
+        """Initialize with initial resource list."""
         super().__init__(addr)
         for r in (initial_resource_list or []):
             self.create_resource(r)
 
     def get_resource_context(self, key: str) -> MemoryContext:
+        """Get resource from database and return the resource wrapped with MemoryContext."""
         lock = memory_storage_lock.get(key)
         if lock:
             lock.acquire()
@@ -94,6 +109,7 @@ class MemoryStorage(BaseStorage):
                           cond: Optional[List]=None,
                           start_key: Optional[str]=None,
                           limit: Optional[int]=None) -> List[BellResource]:
+        """Get resource list from database."""
         if start_key is not None and start_key not in memory_storage_resource:
             raise KeyError
         return list(reversed([memory_storage_resource[x] for x in memory_storage_resource.keys()
@@ -101,6 +117,7 @@ class MemoryStorage(BaseStorage):
                               memory_storage_resource[start_key].created_at][:limit]))
 
     def create_resource(self, obj: BellResource) -> None:
+        """Create resource record."""
         if obj.uuid in memory_storage_resource:
             raise ValueError
         else:
@@ -108,6 +125,7 @@ class MemoryStorage(BaseStorage):
             memory_storage_lock[obj.uuid] = Lock()
 
     def delete_resource(self, key: str) -> BellResource:
+        """Delete resource record."""
         if key not in memory_storage_resource:
             raise KeyError
         else:

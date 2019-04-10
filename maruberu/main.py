@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Main module of maruberu."""
+
 import logging
 import pathlib
 
@@ -27,7 +29,8 @@ define("database", default="localhost:6379/0", type=DataBaseAddress)
 define("env", default="ON_MEMORY", type=str)
 
 
-def main():
+def main() -> None:
+    """Start maruberu server."""
     options.parse_command_line()
     if pathlib.Path(options.conf).is_file():
         options.parse_config_file(options.conf)
@@ -44,12 +47,13 @@ def main():
         "autoescape": "xhtml_escape",
         "debug": options.debug,
     }
+    env = get_env(options.env)
     app = web.Application([
-        (r"/", IndexHandler, get_env(options.env)),
-        (r"/resource/([0-9a-f-]+)/?", ResourceHandler, get_env(options.env)),
-        (r"/admin/?", AdminTokenHandler, get_env(options.env)),
-        (r"/admin/login/?", AdminLoginHandler, get_env(options.env)),
-        (r"/admin/logout/?", AdminLogoutHandler, get_env(options.env)),
+        (r"/", IndexHandler, env),
+        (r"/resource/([0-9a-f-]+)/?", ResourceHandler, env),
+        (r"/admin/?", AdminTokenHandler, env),
+        (r"/admin/login/?", AdminLoginHandler, env),
+        (r"/admin/logout/?", AdminLogoutHandler, env),
     ], **settings)
     server = httpserver.HTTPServer(app)
 

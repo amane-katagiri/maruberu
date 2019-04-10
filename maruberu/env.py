@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Environment module of maruberu."""
+
 import logging
 
 from tornado.options import options
@@ -15,12 +17,13 @@ def _create_env(bell: BaseBell, database: BaseStorage) -> dict:
     return {"bell": bell, "database": database}
 
 
-def _load_env():
+def _load_env() -> dict:
     memory_storage = MemoryStorage(options.database)
     return {"ON_MEMORY": _create_env(MaruBell(memory_storage), memory_storage)}
 
 
-def get_env(name: str):
+def get_env(name: str) -> dict:
+    """Return env variabled from env name."""
     global _environment
     if _environment is None:
         _environment = _load_env()
