@@ -1,0 +1,31 @@
+#!/bin/bash -Cue
+cat <<EOS
+version: "2"
+services:
+  maruberu:
+    restart: "always"
+    build: .
+    container_name: "maruberu"
+    hostname: "maruberu"
+    ports:
+      - "8000:8000/tcp"
+    volumes:
+      - ./conf:/maruberu/maruberu/conf
+EOS
+if [ $# -ge 1 ]; then
+    echo "    devices:"
+fi
+for x in $@; do
+    echo "      - $x"
+done
+cat <<EOS
+    command: "--admin_username='ADMIN' --admin_password='PASSWORD' --database='redis:6379/0' --env='REDIS'"
+    links:
+      - maruberu-redis:redis
+  maruberu-redis:
+    restart: "always"
+    image: "redis"
+    container_name: "maruberu-redis"
+    hostname: "maruberu-redis"
+    command: "--appendonly yes"
+EOS
