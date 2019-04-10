@@ -1,0 +1,4 @@
+#!/bin/bash -Ceu
+echo "$0: on"
+python -c "__import__('time').sleep($1 / 1000)"
+echo "$0: off"
