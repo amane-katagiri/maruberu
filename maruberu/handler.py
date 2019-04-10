@@ -50,7 +50,7 @@ class BaseRequestHandler(web.RequestHandler):
 class IndexHandler(BaseRequestHandler):
     """RequestHandler for general user."""
 
-    def get(self) -> None:
+    async def get(self) -> None:
         """Render index page.
 
         * Show command page to user who has valid token.
@@ -58,7 +58,8 @@ class IndexHandler(BaseRequestHandler):
         """
         token = self.get_argument("token", None)
         if token:
-            with self.database.get_resource_context(token) as c:
+            c = await self.database.get_resource_context(token)
+            async with c:
                 resource = c.resource
             self.render("index.html", token=escape.url_escape(token) if resource else "",
                         resource=resource)  # TODO: template
@@ -131,18 +132,19 @@ class ResourceHandler(BaseRequestHandler):
             else:
                 self.write_error(406)
 
-    def get(self, token: str) -> None:
+    async def get(self, token: str) -> None:
         """Render resource page."""
-        with self.database.get_resource_context(token) as c:
+        c = await self.database.get_resource_context(token)
+        async with c:
             resource = c.resource
         self._write_result(200 if resource else 404, resource)
 
-    def post(self, token: str) -> None:
+    async def post(self, token: str) -> None:
         """Ring or delete resource."""
         if self.get_argument("action", "") == "delete":
             super().check_xsrf_cookie()
             try:
-                r = self.database.delete_resource(token)
+                r = await self.database.delete_resource(token)
                 self._write_result(200, r)
             except KeyError as ex:
                 logging.warning(str(ex))
@@ -152,7 +154,8 @@ class ResourceHandler(BaseRequestHandler):
                 self._write_result(500, None, str(ex) if options.debug else None)
         else:
             try:
-                with self.database.get_resource_context(token) as c:
+                c = await self.database.get_resource_context(token)
+                async with c:
                     resource = c.resource
                     if not resource:
                         self._write_result(404, None, "トークンが正しくありません。")
@@ -214,12 +217,12 @@ class AdminTokenHandler(BaseRequestHandler):
         self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template
 
     @web.authenticated
-    def post(self) -> None:
+    async def post(self) -> None:
         """Create or delete resource."""
         if self.get_argument("action", "") == "delete":
             try:
                 token = self.get_argument("token")
-                r = self.database.delete_resource(token)
+                r = await self.database.delete_resource(token)
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items, new_token=None, old_token=r.uuid)  # TODO: template
             except KeyError as ex:
@@ -251,7 +254,7 @@ class AdminTokenHandler(BaseRequestHandler):
                                  if not_after_date else None,
                                  bool(sticky),
                                  bool(api))
-                self.database.create_resource(r)
+                await self.database.create_resource(r)
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items, new_token=r.uuid, old_token=None)  # TODO: template
             except Exception as ex:

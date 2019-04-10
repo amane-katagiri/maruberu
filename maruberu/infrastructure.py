@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 """Infrastracture module of maruberu."""
 
+from __future__ import annotations
+
+import asyncio
 import copy
+from datetime import datetime
 import logging
-from queue import Full, Queue
-import subprocess
-from threading import Lock, Thread
 from typing import Dict, List, Optional
 
+from tornado import ioloop
 from tornado.options import options
 
 from .models import BaseBell, BaseContext, BaseStorage, BellResource
@@ -21,32 +23,34 @@ class MaruBell(BaseBell):
     def __init__(self, database: BaseStorage) -> None:
         """Initialize with database."""
         super().__init__(database)
-        self._ring_queue = Queue(1)
-        self.worker_thread = Thread(target=self.worker)
-        self.worker_thread.start()
+        self._ring_queue = asyncio.Queue(1)
+        ioloop.IOLoop.current().add_callback(self.worker)
 
     def ring(self, resource: BellResource) -> None:
         """Add resource to queue."""
         try:
             self._ring_queue.put_nowait(resource)
-        except Full:
+        except asyncio.QueueFull:
             raise ResourceBusyError
 
-    def worker(self) -> None:
+    async def worker(self) -> None:
         """Ring bell and notify result to the resource."""
         while True:
-            item = self._ring_queue.get()
+            item = await self._ring_queue.get()
             if item is None:
                 break
             try:
-                p = subprocess.Popen([str(options.ring_command), str(item.milliseconds)])
-                p.wait()
+                p = await asyncio.create_subprocess_exec(str(options.ring_command),
+                                                         str(item.milliseconds))
+                await p.wait()
             except Exception as ex:
                 logging.warning(str(ex))
-                with self.database.get_resource_context(item.uuid) as c:
+                c = await self.database.get_resource_context(item.uuid)
+                async with c:
                     c.resource.fail()
             else:
-                with self.database.get_resource_context(item.uuid) as c:
+                c = await self.database.get_resource_context(item.uuid)
+                async with c:
                     if p.returncode == 0:
                         c.resource.success()
                     else:
@@ -66,11 +70,11 @@ class MemoryContext(BaseContext):
         super().__init__(resource)
         self._lock = lock
 
-    def __enter__(self):
+    async def __aenter__(self):
         """Enter context with resource."""
         return self
 
-    def __exit__(self, ex_type, ex_value, trace):
+    async def __aexit__(self, ex_type, ex_value, trace):
         """Write back resource and release lock."""
         ex = ex_type or ex_value or trace
         if self._lock:
@@ -91,7 +95,7 @@ class MemoryStorage(BaseStorage):
         for r in (initial_resource_list or []):
             self.create_resource(r)
 
-    def get_resource_context(self, key: str) -> MemoryContext:
+    async def get_resource_context(self, key: str) -> MemoryContext:
         """Get resource from database and return the resource wrapped with MemoryContext."""
         lock = memory_storage_lock.get(key)
         if lock:
@@ -116,7 +120,7 @@ class MemoryStorage(BaseStorage):
                               if start_key is None or memory_storage_resource[x].created_at >=
                               memory_storage_resource[start_key].created_at][:limit]))
 
-    def create_resource(self, obj: BellResource) -> None:
+    async def create_resource(self, obj: BellResource) -> None:
         """Create resource record."""
         if obj.uuid in memory_storage_resource:
             raise ValueError
@@ -124,7 +128,7 @@ class MemoryStorage(BaseStorage):
             memory_storage_resource[obj.uuid] = copy.deepcopy(obj)
             memory_storage_lock[obj.uuid] = Lock()
 
-    def delete_resource(self, key: str) -> BellResource:
+    async def delete_resource(self, key: str) -> BellResource:
         """Delete resource record."""
         if key not in memory_storage_resource:
             raise KeyError

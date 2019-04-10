@@ -252,11 +252,11 @@ class BaseContext(object):
         """Initialize with BellResource."""
         self.resource = resource
 
-    def __enter__(self):
+    async def __aenter__(self):
         """Enter context with resource."""
         raise NotImplementedError
 
-    def __exit__(self, ex_type, ex_value, trace):
+    async def __aexit__(self, ex_type, ex_value, trace):
         """Exit context with resource."""
         raise NotImplementedError
 
@@ -268,7 +268,7 @@ class BaseStorage(object):
         """Initialize with database address."""
         self.addr = addr
 
-    def get_resource_context(self, key: str) -> BaseContext:
+    async def get_resource_context(self, key: str) -> BaseContext:
         """Get resource from database and return the resource wrapped with context."""
         raise NotImplementedError
 
@@ -279,11 +279,11 @@ class BaseStorage(object):
         """Get resource list from database."""
         raise NotImplementedError
 
-    def create_resource(self, obj: BellResource) -> None:
+    async def create_resource(self, obj: BellResource) -> None:
         """Create resource record."""
         raise NotImplementedError
 
-    def delete_resource(self, key: str) -> BellResource:
+    async def delete_resource(self, key: str) -> BellResource:
         """Delete resource record."""
         raise NotImplementedError
 

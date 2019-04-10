@@ -59,9 +59,9 @@ def main() -> None:
 
     server.listen(options.port)
     try:
-        ioloop.IOLoop.instance().start()
+        ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
-        get_env("ON_MEMORY")["bell"]._ring_queue.put(None)
+        ioloop.IOLoop.current().add_callback(get_env("ON_MEMORY")["bell"]._ring_queue.put, None)
 
 
 if __name__ == "__main__":
