@@ -1,3 +1,4 @@
 tornado==6.0.1
 pytz==2018.9
 accept-types==0.3.0
+redis==3.2.1

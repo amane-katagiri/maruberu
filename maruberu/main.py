@@ -14,7 +14,6 @@ from tornado.options import options
 from .env import get_env
 from .handler import AdminLoginHandler, AdminLogoutHandler, AdminTokenHandler
 from .handler import IndexHandler, ResourceHandler
-from .models import DataBaseAddress
 
 
 define("conf", default="conf/server.conf")
@@ -25,7 +24,7 @@ define("cookie_secret", default="secret", type=str)
 define("ring_command", default="echo", type=str)
 define("admin_username", default="admin", type=str)
 define("admin_password", default="password", type=str)
-define("database", default="localhost:6379/0", type=DataBaseAddress)
+define("database", default="localhost:6379/0", type=str)
 define("env", default="ON_MEMORY", type=str)
 
 

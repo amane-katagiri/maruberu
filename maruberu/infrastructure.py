@@ -7,9 +7,11 @@ from __future__ import annotations
 import asyncio
 import copy
 from datetime import datetime
+import json
 import logging
 from typing import Dict, List, Optional
 
+import redis
 from tornado import ioloop
 from tornado.options import options
 
@@ -139,4 +141,90 @@ class MemoryStorage(BaseStorage):
             memory_storage_lock[key].release()
             return r
 
-# TODO: impl RedisContext/Storage
+
+class RedisContext(BaseContext):
+    """With-statement context which processes RedisStorage with specified resource."""
+
+    def __init__(self, resource: BellResource,
+                 storage: RedisStorage, lock: Optional[str]=None) -> None:
+        """Initialize with BellResource, RedisStorage and lock key."""
+        super().__init__(resource)
+        self._storage = storage
+        self._lock = lock
+
+    async def __aenter__(self):
+        """Enter context with resource."""
+        return self
+
+    async def __aexit__(self, ex_type, ex_value, trace):
+        """Write back resource and release lock."""
+        ex = ex_type or ex_value or trace
+        if self._lock:
+            if not ex:
+                self._storage.redis.set(self.resource.uuid, json.dumps(self.resource.to_dict()))
+            self._storage.redis.delete(self._lock)
+        return not ex
+
+
+class RedisStorage(BaseStorage):
+    """Database implementation with Redis."""
+    LOCK_LIMIT = 10
+    SLEEP_TIME = 0.1
+
+    def __init__(self, addr: DataBaseAddress) -> None:
+        """Initialize with initial resource list."""
+        super().__init__(addr)
+        self.redis = redis.StrictRedis(host=addr.host, port=addr.port, db=addr.db)
+
+    async def get_resource_context(self, key: str) -> RedisContext:
+        """Get resource from database and return the resource wrapped with RedisContext."""
+        lock = "lock." + key
+        while self.redis.setnx(lock, datetime.now().timestamp()) == 0:
+            await asyncio.sleep(self.SLEEP_TIME)
+        self.redis.expire(lock, self.LOCK_LIMIT)
+        resource = self.redis.get(key)
+        if resource:
+            return RedisContext(BellResource.from_dict(json.loads(resource)), self, lock)
+        else:
+            self.redis.delete(lock)
+            return RedisContext(None, self)
+
+    def get_all_resources(self,
+                          cond: Optional[List]=None,
+                          start_key: Optional[str]=None,
+                          limit: Optional[int]=None) -> List[BellResource]:
+        """Get resource list from database."""
+        if start_key is not None and not self.redis.get(start_key):
+            raise KeyError
+        keys = filter(lambda x: not x.startswith(b"lock."), self.redis.keys())
+        with self.redis.pipeline() as pipe:
+            for key in keys:
+                pipe.get(key)
+            result = pipe.execute()
+        return [BellResource.from_dict(json.loads(x)) for x in result]
+
+    async def create_resource(self, obj: BellResource) -> None:
+        """Create resource record."""
+        lock = "lock." + obj.uuid
+        while self.redis.setnx(lock, datetime.now().timestamp()) == 0:
+            await asyncio.sleep(self.SLEEP_TIME)
+        self.redis.expire(lock, self.LOCK_LIMIT)
+        setnx = self.redis.setnx(obj.uuid, json.dumps(obj.to_dict()))
+        self.redis.delete(lock)
+        if not setnx:
+            raise ValueError
+
+    async def delete_resource(self, key: str) -> BellResource:
+        """Delete resource record."""
+        lock = "lock." + key
+        while self.redis.setnx(lock, datetime.now().timestamp()) == 0:
+            await asyncio.sleep(self.SLEEP_TIME)
+        self.redis.expire(lock, self.LOCK_LIMIT)
+        resource = self.redis.get(key)
+        if resource:
+            self.redis.delete(key)
+            self.redis.delete(lock)
+            return BellResource.from_dict(json.loads(resource))
+        else:
+            self.redis.delete(lock)
+            raise KeyError
