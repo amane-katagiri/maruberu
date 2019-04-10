@@ -21,10 +21,10 @@ TODO: img
 docker run --rm $(for x in $(find /dev/bus/usb/ -type c); do echo --device $x; done) -p 8000:8000 amane/maruberu --admin_username="ADMIN" --admin_password="PASSWORD --debug=True"
 ```
 
-If you don't have any usb relay module or bell, add `--ring_command=echo` and see stdout.
+If you don't have any USB relay module, bell or buzzer, add `--ring_command=bin/ring_dummy` and see stdout.
 
 ### Run with your own config.
-Firstly, copy [maruberu/maruberu/example-server.conf](https://github.com/amane-katagiri/maruberu/blob/master/maruberu/example-server.conf) to `/path/to/your/conf/dir/server.conf`.
+Firstly, copy [:maruberu/example-server.conf](https://github.com/amane-katagiri/maruberu/blob/master/maruberu/example-server.conf) to `/path/to/your/conf/dir/server.conf`.
 
 ```
 docker run --rm $(for x in $(find /dev/bus/usb/ -type c); do echo --device $x; done) -p 8000:8000 -v/path/to/your/conf/dir:/maruberu/maruberu/conf:ro amane/maruberu
@@ -35,9 +35,11 @@ docker run --rm $(for x in $(find /dev/bus/usb/ -type c); do echo --device $x; d
 Use Redis binding to save tokens.
 
 ```
-docker run -d --name maruberu-redis --appendonly yes redis
-docker run -d $(for x in $(find /dev/bus/usb/ -type c); do echo --device $x; done) -p 8000:8000 -v/path/to/your/conf/dir:/maruberu/maruberu/conf:ro --link maruberu-redis:redis amane/maruberu --admin_username="ADMIN" --admin_password="PASSWORD" --database="redis:6379/0" --env="REDIS"
+docker run -d --name maruberu-redis redis --appendonly yes
+docker run -d $(for x in $(find /dev/bus/usb/ -type c); do echo --device $x; done) -p 8000:8000 --link maruberu-redis:redis amane/maruberu --admin_username="ADMIN" --admin_password="PASSWORD" --database="redis:6379/0" --env="REDIS"
 ```
+
+Or, pull this repository and run `make up`.
 
 ## Options
 
