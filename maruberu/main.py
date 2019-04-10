@@ -58,7 +58,10 @@ def main() -> None:
     server = httpserver.HTTPServer(app)
 
     server.listen(options.port)
-    ioloop.IOLoop.instance().start()
+    try:
+        ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt:
+        get_env("ON_MEMORY")["bell"]._ring_queue.put(None)
 
 
 if __name__ == "__main__":
