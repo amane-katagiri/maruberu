@@ -1,28 +1,33 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>maruberu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="canonical" href="https://maruberu.ama.ne.jp/">
-  <style>
-  form {
-    margin: 1em 0;
-  }
-  </style>
-</head>
-<body>
-  <h1>maruberu</h1>
-  {% if token %}  <div>time: {{ resource.milliseconds }}ms</div>
-    <div>lifetime: {% if resource.not_before or resource.not_after %}{% if resource.not_before %}{{ resource.not_before }} {% end if %}〜{% if resource.not_after %} {{ resource.not_after }}{% end if %}{% else %}-{% end if %}</div>
-  <div>option: {% if resource.sticky %}<span title="sticky">♻️</span>{% end if %}{% if resource.api %} <span title="api">🤖</span>{% end if %}</div>
-  <form method="post">
+{% extends "base.html" %}
+{% block title %}Ring Bell Now{% end %}
+{% block header %}今すぐベルを鳴らす{% end %}
+{% block style %}
+div.container input.first-input {
+  margin-top: calc(25vmin - 1em);
+}
+{% end %}
+{% block content %}
+  <form>
     {% module xsrf_form_html() %}
-    <input formaction="/resource/{{ token }}/" type="submit" value="鳴らす">
-    <input formaction="/resource/{{ token }}/?action=delete" type="submit" value="捨てる">
+    <input type="text" class="first-input" name="token" value="{% if token %}{{ token }}{% end if %}" autocomplete="off" placeholder="トークンを入力してください">
+    <div>
+      <input formmethod="get" type="submit" value="探す">
+      <input formmethod="post" formaction="/resource/{{ token }}/" type="submit" value="鳴らす{% if resource %} ({{ resource.milliseconds }}ms){% end if %}"{% if not resource or not resource.is_unused() %} disabled{% end if %}>
+      <input formmethod="post" formaction="/resource/{{ token }}/?action=delete" type="submit" value="捨てる"{% if not resource or not resource.is_unused() %} disabled{% end if %}>
+    </div>
   </form>
-  {% else %}  <div>Invalid token</div>
-{% end if %}
-</body>
-</html>
+  <ul class="description">
+  {% if resource and resource.is_unused() %}
+    {% if resource.not_before and resource.is_before_period() %}<li><span class="not-before-value">{{ resource.not_before }}</span> から</li>{% end if %}
+    {% if resource.not_after and resource.is_within_period() %}<li><span class="not-after-value">{{ resource.not_after }}</span> まで</li>{% end if %}
+    {% if not resource.not_before and not resource.not_after %}<li><span class="whenever-value">いつでも</span></li>{% end if %}
+    <li><span class="sticky-value">{% if resource.sticky %}何度でも{% else %}1回だけ{% end if %}</span></li>
+  {% elif resource and resource.is_using() %}
+    <li>このリソースは使用中です。</li>
+  {% elif resource and resource.is_used() %}
+    <li>このリソースは使用済です。</li>
+  {% elif token %}
+    <li>無効なトークンです。</li>
+  {% end if %}
+  </ul>
+{% end %}

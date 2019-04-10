@@ -1,32 +1,19 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>maruberu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="canonical" href="https://maruberu.ama.ne.jp/admin/login/">
-  <style>
-  form div.params {
-    margin: 1em 0;
-    padding: 0 1em;
-    border: dotted 1px;
-  }
-  form div.params div {
-    margin: 1em 0;
-  }
-  </style>
-</head>
-<body>
-  <h1>Admin</h1>
-  <h2>Login</h2>
+{% extends "base.html" %}
+{% block title %}Login{% end %}
+{% block header %}管理者としてログインする{% end %}
+{% block style %}
+div.container input.first-input {
+  margin-top: calc(25vmin - 2em);
+}
+{% end %}
+{% block content %}
   <form action="/admin/login/" method="post">
     {% module xsrf_form_html() %}
-    <div class="params">
-      <div><label>username : <input type="text" name="username"></label></div>
-      <div><label>password : <input type="password" name="password"></label></div>
-    </div>
-    <div><input type="submit" value="Login"></div>
+    <div><input type="text" class="first-input" name="username" placeholder="IDを入力してください"></div>
+    <div><input type="password" name="password" placeholder="パスワードを入力してください"></div>
+    <div><input type="submit" value="ログイン"></div>
   </form>
-</body>
-</html>
+  <ul class="description">
+    {% if failed %}<li>IDまたはパスワードが一致しません。</li>{% end if %}
+  </ul>
+{% end %}

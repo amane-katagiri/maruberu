@@ -54,6 +54,7 @@ def main() -> None:
         (r"/admin/?", AdminTokenHandler, env),
         (r"/admin/login/?", AdminLoginHandler, env),
         (r"/admin/logout/?", AdminLogoutHandler, env),
+        (r"/static/(.*)", web.StaticFileHandler),
     ], **settings)
     server = httpserver.HTTPServer(app)
 

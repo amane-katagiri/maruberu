@@ -1,22 +1,12 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>maruberu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="canonical" href="https://maruberu.ama.ne.jp/admin/">
-  <style>
-  form div.params {
-    margin: 1em 0;
-    padding: 0 1em;
-    border: dotted 1px;
-  }
-  form div.params div {
-    margin: 1em 0;
+{% extends "base.html" %}
+{% block title %}Manage Resources{% end %}
+{% block header %}トークンを発行する{% end %}
+{% block style %}
+  div.container input.first-input {
+    margin-top: calc(25vmin - 4em);
   }
   table {
-    margin: 1em 0;
+    margin: 1em auto;
     border: solid 1px;
     border-collapse: collapse;
   }
@@ -35,37 +25,32 @@
     border-right: solid 2px;
     white-space: nowrap;
   }
-  td.action form {
-    display: inline;
-  }
   td.action input[type="submit"] {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    width: 2em;
+    margin-top: 0.5em;
   }
-  </style>
-</head>
-<body>
-  <h1>Admin</h1>
-  <div><a href="/admin/logout/">Logout</a></div>
-  <h2>New Resource</h2>
+{% end %}
+{% block content %}
   <form action="/admin/" method="post">
     {% module xsrf_form_html() %}
     <div class="params">
-      <div><label>milliseconds : <input type="number" value=1000 step=1000 min=1000 name="milliseconds"></label></div>
-      <div><label>from : <input type="date" name="not_before_date"><input type="time" step=1 name="not_before_time"></label></div>
-      <div><label>to : <input type="date" name="not_after_date"><input type="time" step=1 name="not_after_time"></label></div>
-      <div>option : <label><input type="checkbox" name="sticky">sticky</label><label><input type="checkbox" name="api">api</label></div>
+      <div><input title="ベルの長さ（ミリ秒）" type="number" class="first-input" value=1000 step=1000 min=1000 name="milliseconds"></div>
+      <div><input title="使用開始日時" type="date" name="not_before_date"><input title="使用開始日時" type="time" step=1 name="not_before_time"></div>
+      <div><input title="使用終了日時" type="date" name="not_after_date"><input title="使用終了日時" type="time" step=1 name="not_after_time"></div>
+      <div><label title="有効期限内なら何度でもベルを鳴らせます"><input type="checkbox" name="sticky">何度でも</label><label title="XSRFトークンを確認しません"><input type="checkbox" name="api">BOT用</label></div>
     </div>
-    <div><input type="submit" value="Create"></div>
+    <div><input type="submit" value="発行する"></div>
   </form>
-  <h2>Resources</h2>
+{% end %}
+{% block another_content %}
+  <h1>トークン一覧</h1>
     <div class="alert">
-{% if new_token %}      <div>generated new token: <a href="/resource/{{ new_token }}">{{ new_token }}</a></div>{% end if %}
-{% if old_token %}      <div>deleted token: {{ old_token }}</div>{% end if %}
+{% if new_token and not failed_in_create %}      <div>トークンが発行されました: <a href="/resource/{{ new_token }}">{{ new_token }}</a></div>
+{% elif failed_in_create %}      <div>トークンの発行に失敗しました: （不明なトークン）</div>{% end if %}
+{% if old_token and not failed_in_delete %}      <div>トークンが削除されました: {{ old_token }}</div>
+{% elif old_token and failed_in_delete %}      <div>トークンの削除に失敗しました: {{ old_token }}</div>
+{% elif not old_token and failed_in_delete %}      <div>トークンの削除に失敗しました: （不明なトークン）</div>{% end if %}
     </div>
+    <div><a href="/admin/logout/">ログアウト</a></div>
   <table>
     <thead><tr><td class="id">ID</td><td class="action">action</td><td>status</td><td>time(ms)</td><td>lifetime</td><td>option</td></tr></thead>
     <tbody>{% if items %}{% for x in items %}
@@ -74,22 +59,21 @@
         <td class="action">
           <form method="get" action="/" target="_blank">
             <input type="hidden" name="token" value="{{ x.uuid }}">
-            <input type="submit" value="🔗" title="share">
+            <input type="submit" value="渡す" title="share">
           </form>
           <form method="post" action="/resource/{{ x.uuid }}/">
             {% module xsrf_form_html() %}
-            <input type="submit" value="🔔" title="ring">
+            <input type="submit" value="鳴らす" title="ring">
           </form>
           <form method="post" action="/admin/">
             {% module xsrf_form_html() %}
             <input type="hidden" name="token" value="{{ x.uuid }}">
             <input type="hidden" name="action" value="delete">
-            <input type="submit" value="❌" title="delete">
+            <input type="submit" value="捨てる" title="delete">
           </form>
         </td>
         <td>{{ x._status.name }}</td>
-        <td>{{ x.milliseconds }}</td><td>{% if x.not_before %}{{ x.not_before }} {% end if %}{% if x.not_before or x.not_after %}〜{% else %}-{% end if %}{% if x.not_after %} {{ x.not_after }}{% end if %}</td><td>{% if x.sticky %}<span title="sticky">♻️</span>{% end if %}{% if x.api %} <span title="api">🤖</span>{% end if %}</td></tr>{% end for %}{% else %}{% end if %}
+        <td>{{ x.milliseconds }}</td><td>{% if x.not_before %}{{ x.not_before }} {% end if %}{% if x.not_before or x.not_after %}〜{% else %}-{% end if %}{% if x.not_after %} {{ x.not_after }}{% end if %}</td><td><ul class="description">{% if x.sticky %}<li>何度でも</li>{% end if %}{% if x.api %}<li>BOT用</li>{% end if %}</td></tr>{% end for %}{% else %}{% end if %}
     </tbody>
   </table>
-  </body>
-</html>
+{% end %}

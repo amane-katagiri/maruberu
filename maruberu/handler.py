@@ -57,14 +57,13 @@ class IndexHandler(BaseRequestHandler):
         * Show token form page to user who doesn't have valid token.
         """
         token = self.get_argument("token", None)
+        resource = None
         if token:
             c = await self.database.get_resource_context(token)
             async with c:
                 resource = c.resource
-            self.render("index.html", token=escape.url_escape(token) if resource else "",
-                        resource=resource)  # TODO: template
-        else:
-            self.render("ad.html")  # TODO: template
+        self.render("index.html",
+                    token=escape.url_escape(token) if token else None, resource=resource)
 
 
 class ResourceHandler(BaseRequestHandler):
@@ -184,7 +183,10 @@ class AdminLoginHandler(BaseRequestHandler):
 
     def get(self) -> None:
         """Render admin login page."""
-        self.render("login.html")  # TODO: template
+        if self.get_current_user():
+            self.redirect("/admin/")
+        else:
+            self.render("login.html", failed=False)
 
     def post(self) -> None:
         """Attempt login as admin."""
@@ -194,7 +196,7 @@ class AdminLoginHandler(BaseRequestHandler):
             self.set_current_user(username)
             self.redirect("/admin/")
         else:
-            self.redirect("/admin/login/")
+            self.render("login.html", failed=True)
 
 
 class AdminLogoutHandler(BaseRequestHandler):
@@ -214,7 +216,8 @@ class AdminTokenHandler(BaseRequestHandler):
     def get(self) -> None:
         """Render resource list page."""
         items = self.database.get_all_resources()
-        self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template
+        self.render("generate.html", items=items, new_token=None, old_token=None,
+                    failed_in_delete=False, failed_in_create=False)
 
     @web.authenticated
     async def post(self) -> None:
@@ -224,14 +227,23 @@ class AdminTokenHandler(BaseRequestHandler):
                 token = self.get_argument("token")
                 r = await self.database.delete_resource(token)
                 items = self.database.get_all_resources()
-                self.render("generate.html", items=items, new_token=None, old_token=r.uuid)  # TODO: template
+                self.render("generate.html", items=items,
+                            new_token=None, old_token=r.uuid,
+                            failed_in_delete=False, failed_in_create=False)
             except KeyError as ex:
                 logging.warning(str(ex))
+                token = self.get_argument("token", None)
                 items = self.database.get_all_resources()
-                self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template
+                self.render("generate.html", items=items,
+                            new_token=None, old_token=token,
+                            failed_in_delete=True, failed_in_create=False)
             except Exception as ex:
                 logging.error("Error in deleting resource ({}).".format(ex))
-                self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template
+                token = self.get_argument("token", None)
+                items = self.database.get_all_resources()
+                self.render("generate.html", items=items,
+                            new_token=None, old_token=token,
+                            failed_in_delete=True, failed_in_create=False)
         else:
             milliseconds = self.get_argument("milliseconds")
             not_before_date = self.get_argument("not_before_date")
@@ -256,8 +268,10 @@ class AdminTokenHandler(BaseRequestHandler):
                                  bool(api))
                 await self.database.create_resource(r)
                 items = self.database.get_all_resources()
-                self.render("generate.html", items=items, new_token=r.uuid, old_token=None)  # TODO: template
+                self.render("generate.html", items=items, new_token=r.uuid, old_token=None,
+                            failed_in_delete=False, failed_in_create=False)
             except Exception as ex:
                 logging.warning(str(ex))
                 items = self.database.get_all_resources()
-                self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template
+                self.render("generate.html", items=items, new_token=None, old_token=None,
+                            failed_in_delete=False, failed_in_create=True)

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{% block title %}maruberu{% end %} - maruberu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+  h1 {
+    text-align: center;
+  }
+  div.container {
+    width: calc(50vmin);
+    height: calc(50vmin);
+    background-image: url("/static/bell.svg");
+    margin: 0 auto;
+    text-align: center;
+  }
+  div.container form input[type="text"], div.container form input[type="password"],
+  div.container form input[type="number"], div.container form input[type="date"],
+  div.container form input[type="time"] {
+    font-size: 1em;
+    width: 90%;
+    height: 2em;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  div.container form input[type="checkbox"] {
+    width: 2em;
+    height: 2em;
+    vertical-align: middle;
+  }
+  div.container form input[type="date"], div.container form input[type="time"] {
+    width: 45%;
+  }
+  div.container input[type="submit"] {
+    font-size: 1em;
+    height: 3em;
+    margin-top: 1em;
+  }
+  div.container .description {
+    margin-top: 1em;
+  }
+  ul.description {
+    padding-left: 0;
+  }
+  ul.description li {
+    display: inline;
+  }
+  ul.description li:after {
+    content: " / ";
+  }
+  ul.description li:last-child:after {
+    content: "";
+  }
+  div.another-container, div.footer {
+    margin-top: 1em;
+    text-align: center;
+  }
+{% block style %}
+{% end %}
+  </style>
+</head>
+<body>
+  <h1>{% block header %}maruberu{% end %}</h1>
+  <div class="container">
+{% block content %}
+{% end %}
+  </div>
+  <div class="another-container">
+{% block another_content %}
+{% end %}
+  </div>
+  <div class="footer">
+  <small><a href="https://abs.twimg.com/emoji/v2/svg/1f514.svg">:bell: emoji</a> is licensed under a CC BY 4.0 by Twitter, Inc and other contributors.</small>
+  </div>
+</body>
+</html>
