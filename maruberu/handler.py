@@ -28,7 +28,7 @@ class BaseRequestHandler(web.RequestHandler):
     def get_current_user(self) -> Optional[bytes]:
         """Load username from secure cookie."""
         username = self.get_secure_cookie(self.cookie_username)
-        if escape.utf8(username) != escape.utf8(options.admin_username):
+        if escape.utf8(username) != escape.utf8(options.admin_username):  # TODO: auth
             return None
         else:
             return escape.utf8(username)
@@ -61,9 +61,9 @@ class IndexHandler(BaseRequestHandler):
             with self.database.get_resource_context(token) as c:
                 resource = c.resource
             self.render("index.html", token=escape.url_escape(token) if resource else "",
-                        resource=resource)
+                        resource=resource)  # TODO: template
         else:
-            self.render("ad.html")
+            self.render("ad.html")  # TODO: template
 
 
 class ResourceHandler(BaseRequestHandler):
@@ -105,7 +105,7 @@ class ResourceHandler(BaseRequestHandler):
 """.format(code,
            escape.xhtml_escape(reason) if reason else None,
            escape.xhtml_escape(str(resource.to_dict())) if resource else None)
-        self.write(html)
+        self.write(html)  # TODO: use template
 
     def _write_result(self, code: int, resource: Optional[BellResource],
                       reason: Optional[str]=None) -> None:
@@ -181,7 +181,7 @@ class AdminLoginHandler(BaseRequestHandler):
 
     def get(self) -> None:
         """Render admin login page."""
-        self.render("login.html")
+        self.render("login.html")  # TODO: template
 
     def post(self) -> None:
         """Attempt login as admin."""
@@ -211,7 +211,7 @@ class AdminTokenHandler(BaseRequestHandler):
     def get(self) -> None:
         """Render resource list page."""
         items = self.database.get_all_resources()
-        self.render("generate.html", items=items, new_token=None, old_token=None)
+        self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template
 
     @web.authenticated
     def post(self) -> None:
@@ -221,14 +221,14 @@ class AdminTokenHandler(BaseRequestHandler):
                 token = self.get_argument("token")
                 r = self.database.delete_resource(token)
                 items = self.database.get_all_resources()
-                self.render("generate.html", items=items, new_token=None, old_token=r.uuid)
+                self.render("generate.html", items=items, new_token=None, old_token=r.uuid)  # TODO: template
             except KeyError as ex:
                 logging.warning(str(ex))
                 items = self.database.get_all_resources()
-                self.render("generate.html", items=items, new_token=None, old_token=None)
+                self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template
             except Exception as ex:
                 logging.error("Error in deleting resource ({}).".format(ex))
-                self.render("generate.html", items=items, new_token=None, old_token=None)
+                self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template
         else:
             milliseconds = self.get_argument("milliseconds")
             not_before_date = self.get_argument("not_before_date")
@@ -253,8 +253,8 @@ class AdminTokenHandler(BaseRequestHandler):
                                  bool(api))
                 self.database.create_resource(r)
                 items = self.database.get_all_resources()
-                self.render("generate.html", items=items, new_token=r.uuid, old_token=None)
+                self.render("generate.html", items=items, new_token=r.uuid, old_token=None)  # TODO: template
             except Exception as ex:
                 logging.warning(str(ex))
                 items = self.database.get_all_resources()
-                self.render("generate.html", items=items, new_token=None, old_token=None)
+                self.render("generate.html", items=items, new_token=None, old_token=None)  # TODO: template

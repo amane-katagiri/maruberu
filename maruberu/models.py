@@ -183,7 +183,7 @@ class BellResource(object):
                 raise ResourceInUseError
             else:
                 raise InvalidResourceOperationError
-        elif False:  # TODO
+        elif False:  # TODO forbid
             raise ResourceForbiddenError
         else:
             bell.ring(self)
