@@ -21,7 +21,7 @@ TODO: img
 docker run --rm $(for x in $(find /dev/bus/usb/ -type c); do echo --device $x; done) -p 8000:8000 amane/maruberu --admin_username="ADMIN" --admin_password="PASSWORD --debug=True"
 ```
 
-If you don't have any USB relay module, bell or buzzer, add `--ring_command=bin/ring_dummy` and see stdout.
+If you don't have any USB relay module, bell or buzzer, add `--ring_command=:/bin/ring_dummy` and see stdout.
 
 ### Run with your own config.
 Firstly, copy [:maruberu/example-server.conf](https://github.com/amane-katagiri/maruberu/blob/master/maruberu/example-server.conf) to `/path/to/your/conf/dir/server.conf`.

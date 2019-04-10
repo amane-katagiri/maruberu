@@ -37,6 +37,9 @@ def main() -> None:
     else:
         options.parse_command_line()
         logging.warning("conf '{}' is not found.".format(options.conf))
+    cwd = pathlib.Path(__file__).resolve().parent
+    if options.ring_command[:2] == ":/":
+        options.ring_command = str(cwd / options.ring_command[2:])
 
     settings = {
         "xsrf_cookies": True,
