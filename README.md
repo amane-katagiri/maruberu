@@ -21,6 +21,8 @@ TODO: img
 docker run --rm $(for x in $(find /dev/bus/usb/ -type c); do echo --device $x; done) -p 8000:8000 amane/maruberu --admin_username="ADMIN" --admin_password="PASSWORD --debug=True"
 ```
 
+Let's access http://localhost:8000/admin/login and login with ADMIN:PASSWORD. You can list sample tokens in the bottom of the admin page.
+
 If you don't have any USB relay module, bell or buzzer, add `--ring_command=:/bin/ring_dummy` and see stdout.
 
 ### Run with your own config.
