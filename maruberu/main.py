@@ -16,7 +16,7 @@ from .handler import AdminLoginHandler, AdminLogoutHandler, AdminTokenHandler
 from .handler import IndexHandler, ResourceHandler
 
 
-define("conf", default="conf/server.conf")
+define("conf", default="conf/server.conf", type=str)
 define("debug", default=False, type=bool)
 define("host", default="localhost", type=str)
 define("port", default=8000, type=int)
@@ -30,12 +30,13 @@ define("env", default="ON_MEMORY", type=str)
 
 def main() -> None:
     """Start maruberu server."""
-    options.parse_command_line()
+    options.parse_command_line(final=False)
     if pathlib.Path(options.conf).is_file():
-        options.parse_config_file(options.conf)
+        options.parse_config_file(options.conf, final=False)
+        options.parse_command_line()
     else:
+        options.parse_command_line()
         logging.warning("conf '{}' is not found.".format(options.conf))
-    options.parse_command_line()
 
     settings = {
         "xsrf_cookies": True,
