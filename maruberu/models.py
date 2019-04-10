@@ -49,7 +49,7 @@ class ResourceDisabledError(InvalidResourceOperationError):
 
     def __init__(self) -> None:
         """Initialize with detailed message."""
-        super().__init__("このトークンはもう使えません。")
+        super().__init__("このトークンは使用済みです。")
 
 
 class ResourceBeforePeriodError(InvalidResourceOperationError):

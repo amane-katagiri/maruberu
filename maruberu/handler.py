@@ -63,7 +63,7 @@ class IndexHandler(BaseRequestHandler):
             async with c:
                 resource = c.resource
         self.render("index.html",
-                    token=escape.url_escape(token) if token else None, resource=resource)
+                    token=escape.url_escape(token) if token else None, resource=resource, msg="")
 
 
 class ResourceHandler(BaseRequestHandler):
@@ -76,7 +76,7 @@ class ResourceHandler(BaseRequestHandler):
         """
         pass
 
-    def _write_json_result(self, code: int, resource: Optional[BellResource],
+    def _write_json_result(self, code: int, token: str, resource: Optional[BellResource],
                            reason: Optional[str]=None) -> None:
         """Write response in json.
 
@@ -89,46 +89,40 @@ class ResourceHandler(BaseRequestHandler):
                "resource": resource.to_dict() if resource else None}
         self.write(escape.json_encode(obj))
 
-    def _write_html_result(self, code: int, resource: Optional[BellResource],
+    def _write_html_result(self, code: int, token: str, resource: Optional[BellResource],
                            reason: Optional[str]=None) -> None:
         """Write response in html.
 
         Use in resource which doesn't have `api` flag.
         """
         self.set_status(code)
-        self.set_header("Content-Type", "text/html; charset=UTF-8")
-        html = """<html><body>
-<div>code: {}</div>
-<div>reason: {}</div>
-<div>resource: {}</div>
-</body></html>
-""".format(code,
-           escape.xhtml_escape(reason) if reason else None,
-           escape.xhtml_escape(str(resource.to_dict())) if resource else None)
-        self.write(html)  # TODO: use template
+        self.render("index.html", token=token,
+                    resource=resource if resource else None, msg=reason)
 
-    def _write_result(self, code: int, resource: Optional[BellResource],
+    def _write_result(self, code: int, token: str, resource: Optional[BellResource],
                       reason: Optional[str]=None) -> None:
         accept = parse_header(self.request.headers.get("accept"))
         html_weight = max([*[x.weight for x in accept if x.matches("text/html")], -1])
         json_weight = max([*[x.weight for x in accept if x.matches("application/json")], -1])
         if resource:
             if not resource.api and html_weight > 0:
-                self._write_html_result(code, resource, reason)
+                self._write_html_result(code, token, resource, reason)
             elif resource.api and json_weight > 0:
-                self._write_json_result(code, resource, reason)
-            elif html_weight >= json_weight > 0:
-                self._write_html_result(code, resource, reason)
-            elif 0 < html_weight < json_weight:
-                self._write_json_result(code, resource, reason)
+                self._write_json_result(code, token, resource, reason)
+            elif html_weight > 0 and html_weight >= json_weight:
+                self._write_html_result(code, token, resource, reason)
+            elif json_weight > 0 and json_weight >= html_weight:
+                self._write_json_result(code, token, resource, reason)
             else:
+                self.set_status(406)
                 self.write_error(406)
         else:
-            if html_weight >= json_weight > 0:
-                self._write_html_result(code, resource, reason)
-            elif 0 < html_weight < json_weight:
-                self._write_json_result(code, resource, reason)
+            if html_weight > 0 and html_weight >= json_weight:
+                self._write_html_result(code, token, resource, reason)
+            elif json_weight > 0 and json_weight >= html_weight:
+                self._write_json_result(code, token, resource, reason)
             else:
+                self.set_status(406)
                 self.write_error(406)
 
     async def get(self, token: str) -> None:
@@ -136,46 +130,46 @@ class ResourceHandler(BaseRequestHandler):
         c = await self.database.get_resource_context(token)
         async with c:
             resource = c.resource
-        self._write_result(200 if resource else 404, resource)
+        self._write_result(200 if resource else 404, token, resource)
 
     async def post(self, token: str) -> None:
         """Ring or delete resource."""
         if self.get_argument("action", "") == "delete":
             super().check_xsrf_cookie()
             try:
-                r = await self.database.delete_resource(token)
-                self._write_result(200, r)
+                await self.database.delete_resource(token)
+                self.redirect("/")
             except KeyError as ex:
                 logging.warning(str(ex))
-                self._write_result(404, None)
+                self._write_result(404, token, None)
             except Exception as ex:
                 logging.error("Error in deleting resource ({}).".format(ex))
-                self._write_result(500, None, str(ex) if options.debug else None)
+                self._write_result(500, token, None, str(ex) if options.debug else None)
         else:
             try:
                 c = await self.database.get_resource_context(token)
                 async with c:
                     resource = c.resource
                     if not resource:
-                        self._write_result(404, None, "トークンが正しくありません。")
+                        self._write_result(404, token, None)
                         return
                     if not resource.api:
                         super().check_xsrf_cookie()
                     try:
                         resource.ring(self.bell)
                     except (ResourceBeforePeriodError, ResourceDisabledError) as ex:
-                        self._write_result(403, resource, ex.msg)
+                        self._write_result(403, token, resource, ex.msg)
                     except ResourceInUseError as ex:
-                        self._write_result(429, resource, ex.msg)
+                        self._write_result(429, token, resource, ex.msg)
                     except ResourceBusyError as ex:
-                        self._write_result(503, resource, ex.msg)
+                        self._write_result(503, token, resource, ex.msg)
                     except ResourceForbiddenError as ex:
-                        self._write_result(503, resource, ex.msg)
+                        self._write_result(503, token, resource, ex.msg)
                     else:
-                        self._write_result(202, resource)
+                        self._write_result(202, token, resource)
             except Exception as ex:
                 logging.error("Error in ringing resource ({}).".format(ex))
-                self._write_result(500, None, str(ex) if options.debug else None)
+                self._write_result(500, token, None, str(ex) if options.debug else None)
 
 
 class AdminLoginHandler(BaseRequestHandler):

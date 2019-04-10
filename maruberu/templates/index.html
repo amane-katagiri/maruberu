@@ -5,15 +5,74 @@
 div.container input.first-input {
   margin-top: calc(25vmin - 1em);
 }
+{% if resource and resource.is_using() and not msg %}
+@keyframes ringing {
+  from {left: -.5em;}
+  to {left: .5em;}
+}
+div.container {
+  position: relative;
+  animation: ringing 0.1s linear {{ int(resource.milliseconds / 100 + min(10, resource.milliseconds / 1000)) }} alternate;
+}
+{% end if %}
+{% end %}
+{% block script %}
+function remove_xsrf_token() {
+    var node = document.querySelector('input[type="hidden"][name="_xsrf"]');
+    return node !== null ? node.parentNode.removeChild(node) : null;
+}
+var node = document.getElementById("open_button");
+if (node !== null) {
+    node.addEventListener("click", remove_xsrf_token, false);
+}
+{% if resource and resource.is_using() and not msg %}
+function check_result() {
+    var xhr = new XMLHttpRequest();
+    var endpoint = "/resource/{{ token }}";
+    xhr.open("GET", endpoint, true);
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.responseType = "json";
+    xhr.onreadystatechange = function () {
+      if(xhr.readyState === 4) {
+        var node = document.getElementById("container");
+        if (node !== null) {
+            node.style.cssText = "";
+        }
+        if (xhr.status === 200) {
+          var node = document.getElementById("using");
+          if (node !== null) {
+            node.innerHTML = "ベルを{{ resource.milliseconds }}ms鳴らしました。";
+          } else {
+            alert("ベルを{{ resource.milliseconds }}ms鳴らしました。");
+          }
+        } else {
+          var node = document.getElementById("using");
+          if (node !== null) {
+            node.innerHTML = "ベルの状態を取得できませんでした。";
+          } else {
+            alert("ベルの状態を取得できませんでした。");
+          }
+          if (xhr.response) {
+            console.log(xhr.response);
+          }
+        }
+      }
+    };
+    xhr.send();
+}
+window.addEventListener("load", function(){
+  window.setTimeout(check_result, {{ resource.milliseconds }});
+});
+{% end if %}
 {% end %}
 {% block content %}
   <form>
     {% module xsrf_form_html() %}
     <input type="text" class="first-input" name="token" value="{% if token %}{{ token }}{% end if %}" autocomplete="off" placeholder="トークンを入力してください">
     <div>
-      <input formmethod="get" type="submit" value="探す">
-      <input formmethod="post" formaction="/resource/{{ token }}/" type="submit" value="鳴らす{% if resource %} ({{ resource.milliseconds }}ms){% end if %}"{% if not resource or not resource.is_unused() %} disabled{% end if %}>
-      <input formmethod="post" formaction="/resource/{{ token }}/?action=delete" type="submit" value="捨てる"{% if not resource or not resource.is_unused() %} disabled{% end if %}>
+      <input formmethod="get" formaction="/" type="submit" id="open_button" value="開く" onclick="remove_xsrf_token()">
+      <input formmethod="post" {% if token %}formaction="/resource/{{ token }}/" {% end if %}type="submit" value="鳴らす{% if resource %} ({{ resource.milliseconds }}ms){% end if %}"{% if not resource or not resource.is_valid() %} disabled{% end if %}>
+      <input formmethod="post" {% if token %}formaction="/resource/{{ token }}/?action=delete" {% end if %}type="submit" value="捨てる"{% if not resource %} disabled{% end if %}>
     </div>
   </form>
   <ul class="description">
@@ -22,12 +81,24 @@ div.container input.first-input {
     {% if resource.not_after and resource.is_within_period() %}<li><span class="not-after-value">{{ resource.not_after }}</span> まで</li>{% end if %}
     {% if not resource.not_before and not resource.not_after %}<li><span class="whenever-value">いつでも</span></li>{% end if %}
     <li><span class="sticky-value">{% if resource.sticky %}何度でも{% else %}1回だけ{% end if %}</span></li>
-  {% elif resource and resource.is_using() %}
-    <li>このリソースは使用中です。</li>
-  {% elif resource and resource.is_used() %}
-    <li>このリソースは使用済です。</li>
-  {% elif token %}
-    <li>無効なトークンです。</li>
+  {% end if %}
+  {% if msg %}
+    <li>{{ msg }}</li>
+  {% else %}
+    {% if not(resource and resource.is_valid()) %}
+      {% if resource and resource.is_using() %}
+        <li id="using">このトークンは使用中です。</li>
+      {% elif resource and resource.is_used() %}
+        <li>このトークンは使用済みです。</li>
+      {% elif resource and resource.is_unused() %}
+        <li>このトークンはまだ有効ではありません。</li>
+      {% elif token %}
+        <li>無効なトークンです。</li>
+      {% end if %}
+    {% end if %}
   {% end if %}
   </ul>
+{% end %}
+{% block another_content %}
+    <div><a href="/admin/">admin</a></div>
 {% end %}

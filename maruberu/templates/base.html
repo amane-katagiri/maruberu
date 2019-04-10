@@ -63,7 +63,7 @@
 </head>
 <body>
   <h1>{% block header %}maruberu{% end %}</h1>
-  <div class="container">
+  <div id="container" class="container">
 {% block content %}
 {% end %}
   </div>
@@ -74,5 +74,9 @@
   <div class="footer">
   <small><a href="https://abs.twimg.com/emoji/v2/svg/1f514.svg">:bell: emoji</a> is licensed under a CC BY 4.0 by Twitter, Inc and other contributors.</small>
   </div>
+  <script>
+{% block script %}
+{% end %}
+  </script>
 </body>
 </html>
