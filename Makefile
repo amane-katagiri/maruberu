@@ -3,7 +3,7 @@ all: build
 conf/server.conf: maruberu/example-server.conf
 	mkdir -p ./conf
 ifneq ("$(wildcard conf/server.conf)","")
-	diff -up ./maruberu/example-server.conf ./conf/server.conf || true
+	diff -up ./conf/server.conf ./maruberu/example-server.conf || true
 endif
 	cp -i ./maruberu/example-server.conf ./conf/server.conf
 	touch ./conf/server.conf
