@@ -84,7 +84,9 @@ class BellResource(object):
                  sticky: bool=False,
                  api: bool=False,
                  uuid: Union[str, Callable]=uuid.uuid4,
-                 status: BellResourceStatus=BellResourceStatus.UNUSED) -> None:
+                 status: BellResourceStatus=BellResourceStatus.UNUSED,
+                 created_at: Optional[datetime]=None,
+                 updated_at: Optional[datetime]=None) -> None:
         """Initialize with resource params."""
         # on table
         self.uuid: str = str(uuid() if callable(uuid) else uuid)
@@ -94,8 +96,8 @@ class BellResource(object):
         self.sticky: bool = sticky
         self.api: bool = api
         self._status: BellResourceStatus = status
-        self.created_at: datetime = datetime.now(pytz.utc)
-        self.updated_at: datetime = datetime.now(pytz.utc)
+        self.created_at: datetime = created_at or datetime.now(pytz.utc)
+        self.updated_at: datetime = updated_at or datetime.now(pytz.utc)
         # not on table
         self._is_before_period: Optional[bool] = None
         self._is_after_period: Optional[bool] = None
@@ -110,7 +112,9 @@ class BellResource(object):
                    if buf["not_after"] else None,
                    bool(buf["sticky"]), bool(buf["api"]),
                    uuid=str(buf["uuid"]),
-                   status=BellResourceStatus[buf["status"]])
+                   status=BellResourceStatus[buf["status"]],
+                   created_at=buf["created_at"],
+                   updated_at=buf["updated_at"])
 
     def to_dict(self) -> str:
         """Extract BellResource as dict."""
@@ -120,7 +124,9 @@ class BellResource(object):
                "not_after": self.not_after.isoformat() if self.not_after else None,
                "sticky": self.sticky,
                "api": self.api,
-               "status": self._status.name}
+               "status": self._status.name,
+               "created_at": self.created_at.isoformat() if self.created_at else None,
+               "updated_at": self.updated_at.isoformat() if self.updated_at else None}
         return obj
 
     def _validate_period(self) -> None:
