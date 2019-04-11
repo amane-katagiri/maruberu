@@ -1,18 +1,22 @@
 # maruberu
 
-maruberu is a simple ??? server written in Python/Tornado.
+maruberu is a simple resource-sharing server written in Python/Tornado.
 
 ## Demo
 
-TODO: movie
+[![demo](https://user-images.githubusercontent.com/8361232/55939430-ad030d00-5c78-11e9-8ec3-4659a751942e.gif)](https://test.maruberu.ama.ne.jp/)
+
+Let's visit [test.maruberu.ama.ne.jp](https://test.maruberu.ama.ne.jp/) and ring bell right now.
 
 ## Requirement
 
 * [丸ベル4型AC6VDC3V](https://www2.panasonic.biz/scvb/a2A/opnItemDetail?item_cd=EB04K&item_no=EB04K&catalog_view_flg=1&contents_view_flg=1&vcata_flg=1)
 
+[![maruberu](https://user-images.githubusercontent.com/8361232/55941494-4af8d680-5c7d-11e9-9ce6-b4f1a49acd87.jpg)](https://www.youtube.com/watch?v=xIkVAX1yXVA)
+
 * [SODIAL(R)5V USBリレー1チャンネル](https://www.amazon.co.jp/dp/B00OPVQTY6/)
 
-TODO: img
+[![usb-relay](https://user-images.githubusercontent.com/8361232/55939883-e12afd80-5c79-11e9-892b-c00445e2210a.jpg)](https://www.youtube.com/watch?v=iL9tF8JH4SY)
 
 ## Quick start on Docker
 
