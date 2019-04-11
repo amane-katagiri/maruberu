@@ -171,6 +171,7 @@ class RedisStorage(BaseStorage):
     """Database implementation with Redis."""
     LOCK_LIMIT = 10
     SLEEP_TIME = 0.1
+    FETCH_COUNT = 100
 
     def __init__(self, addr: DataBaseAddress) -> None:
         """Initialize with initial resource list."""
@@ -195,14 +196,23 @@ class RedisStorage(BaseStorage):
                           start_key: Optional[str]=None,
                           limit: Optional[int]=None) -> List[BellResource]:
         """Get resource list from database."""
-        if start_key is not None and not self.redis.get(start_key):
+        start_item = self.redis.get(start_key) if start_key else None
+        if start_key and not start_item:
             raise KeyError
-        keys = filter(lambda x: not x.startswith(b"lock."), self.redis.keys())
-        with self.redis.pipeline() as pipe:
-            for key in keys:
-                pipe.get(key)
-            result = pipe.execute()
-        return [BellResource.from_dict(json.loads(x)) for x in result]
+        keys = list(sorted(filter(lambda x: not x.startswith(b"lock."), self.redis.keys())))
+        result = list()
+        for x in range(int(len(keys) / self.FETCH_COUNT) + 1):
+            with self.redis.pipeline() as pipe:
+                for key in keys[(x * self.FETCH_COUNT):((x + 1) * self.FETCH_COUNT)]:
+                    pipe.get(key)
+                p = pipe.execute()
+            for y in p:
+                buf = BellResource.from_dict(json.loads(y))
+                if not start_key or buf.created_at >= start_item.created_at:
+                    result.append(buf)
+                if limit and len(result) >= limit:
+                    return list(sorted(result, key=lambda x: x.created_at, reverse=True))
+        return list(sorted(result, key=lambda x: x.created_at, reverse=True))
 
     async def create_resource(self, obj: BellResource) -> None:
         """Create resource record."""
