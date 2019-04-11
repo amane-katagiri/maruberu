@@ -6,6 +6,8 @@ maruberu is a simple resource-sharing server written in Python/Tornado.
 
 [![demo](https://user-images.githubusercontent.com/8361232/55939430-ad030d00-5c78-11e9-8ec3-4659a751942e.gif)](https://test.maruberu.ama.ne.jp/)
 
+[:bell: emoji](https://abs.twimg.com/emoji/v2/svg/1f514.svg) is licensed under a [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) by Twitter, Inc and other contributors.
+
 Let's visit [test.maruberu.ama.ne.jp](https://test.maruberu.ama.ne.jp/) and ring bell right now.
 
 ## Requirement
