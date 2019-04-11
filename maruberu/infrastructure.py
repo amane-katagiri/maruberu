@@ -32,6 +32,8 @@ class MaruBell(BaseBell):
     def ring(self, resource: BellResource) -> None:
         """Add resource to queue."""
         try:
+            if self._ring_queue._unfinished_tasks:
+                raise ResourceBusyError
             self._ring_queue.put_nowait(resource)
         except asyncio.QueueFull:
             raise ResourceBusyError
