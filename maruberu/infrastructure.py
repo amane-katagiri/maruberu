@@ -39,25 +39,44 @@ class MaruBell(BaseBell):
     async def worker(self) -> None:
         """Ring bell and notify result to the resource."""
         while True:
-            item = await self._ring_queue.get()
-            if item is None:
-                break
+            try:
+                item = await self._ring_queue.get()
+                if item is None:
+                    break
+            except Exception as ex:
+                logging.error(str(ex))
+                continue
             try:
                 p = await asyncio.create_subprocess_exec(str(options.ring_command),
                                                          str(item.milliseconds))
                 await p.wait()
             except Exception as ex:
-                logging.warning(str(ex))
-                c = await self.database.get_resource_context(item.uuid)
-                async with c:
-                    c.resource.fail()
+                logging.error(str(ex))
+                try:
+                    c = await self.database.get_resource_context(item.uuid)
+                    async with c:
+                        if c.resource:
+                            c.resource.fail()
+                        else:
+                            msg = "Resource was deleted while ringing: {}".format(item.uuid)
+                            logging.warning(msg)
+                except Exception as ex:
+                    logging.error("{}: {}".format(ex, item.uuid))
             else:
-                c = await self.database.get_resource_context(item.uuid)
-                async with c:
-                    if p.returncode == 0:
-                        c.resource.success()
-                    else:
-                        c.resource.fail()
+                try:
+                    c = await self.database.get_resource_context(item.uuid)
+                    async with c:
+                        if not c.resource:
+                            msg = "Resource '{}' was deleted while ringing.".format(item.uuid)
+                            logging.warning(msg)
+                            msg = "Worker command for '{}' returned {}."
+                            logging.warning(msg.format(item.uuid, p.returncode))
+                        elif p.returncode == 0:
+                            c.resource.success()
+                        else:
+                            c.resource.fail()
+                except Exception as ex:
+                    logging.error("{}: {}".format(ex, item.uuid))
             self._ring_queue.task_done()
 
 
