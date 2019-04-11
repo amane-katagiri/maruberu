@@ -68,8 +68,17 @@ class IndexHandler(BaseRequestHandler):
                 return
             async with c:
                 resource = c.resource
+        items = list()
+        if options.debug:
+            items = ["00000000-0000-0000-0000-000000000000",
+                     "11111111-1111-1111-1111-111111111111",
+                     "22222222-2222-2222-2222-222222222222",
+                     "33333333-3333-3333-3333-333333333333",
+                     "44444444-4444-4444-4444-444444444444",
+                     "55555555-5555-5555-5555-555555555555"]
         self.render("index.html",
-                    token=escape.url_escape(token) if token else None, resource=resource, msg="")
+                    token=escape.url_escape(token) if token else None, resource=resource, msg="",
+                    items=items)
 
 
 class ResourceHandler(BaseRequestHandler):
@@ -103,7 +112,7 @@ class ResourceHandler(BaseRequestHandler):
         """
         self.set_status(code)
         self.render("index.html", token=token,
-                    resource=resource if resource else None, msg=reason)
+                    resource=resource if resource else None, msg=reason, items=None)
 
     def _write_result(self, code: int, token: str, resource: Optional[BellResource],
                       reason: Optional[str]=None) -> None:
