@@ -77,7 +77,10 @@
     <div><small><a href="https://abs.twimg.com/emoji/v2/svg/1f514.svg">:bell: emoji</a> is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> by Twitter, Inc and other contributors.</small></div>
   </div>
   <div class="footer">
-    {% block menu %}<div><a href="/admin/">admin</a></div>{% end %}
+    <ul class="description">
+      <li><a href="/">top</a></li>
+      {% block menu %}<li><a href="/admin/">admin</a></li>{% end %}
+    </ul>
   </div>
   <script>
 {% block script %}
