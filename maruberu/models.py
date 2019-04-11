@@ -31,8 +31,9 @@ class BellResourceStatus(Enum):
 class InvalidResourceOperationError(RuntimeError):
     """Base exception for BellResource."""
 
-    def __init__(self, msg: str) -> None:
+    def __init__(self, msg: str="") -> None:
         """Initialize with detailed message."""
+        super().__init__(msg)
         self.msg = msg
 
 
