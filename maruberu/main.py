@@ -57,7 +57,7 @@ def main() -> None:
     env = get_env(options.env)
     app = web.Application([
         (r"/", IndexHandler, env),
-        (r"/resource/([0-9a-f-]+)/?", ResourceHandler, env),
+        (r"/resource/([0-9a-f-]+)?/?", ResourceHandler, env),
         (r"/admin/?", AdminTokenHandler, env),
         (r"/admin/login/?", AdminLoginHandler, env),
         (r"/admin/logout/?", AdminLogoutHandler, env),

@@ -10,10 +10,11 @@ from typing import Optional
 
 from accept_types import parse_header
 from tornado import escape
+from tornado import ioloop
 from tornado import web
 from tornado.options import options
 
-from .models import BaseBell, BaseStorage, BellResource
+from .models import BaseBell, BaseStorage, BellResource, init_storage_with_sample_data
 from .models import ResourceBeforePeriodError, ResourceBusyError, ResourceDisabledError
 from .models import ResourceForbiddenError, ResourceInUseError
 
@@ -144,6 +145,9 @@ class ResourceHandler(BaseRequestHandler):
 
     async def get(self, token: str) -> None:
         """Render resource page."""
+        if not token:
+            self.redirect("/")
+            return
         try:
             c = await self.database.get_resource_context(token)
         except Exception as ex:
@@ -156,6 +160,22 @@ class ResourceHandler(BaseRequestHandler):
 
     async def post(self, token: str) -> None:
         """Ring or delete resource."""
+        if not token:
+            if self.get_argument("action", "") == "reset":
+                if not options.debug:
+                    self._write_result(403, token, None, "その操作は許可されていません。")
+                else:
+                    try:
+                        ioloop.IOLoop.current().add_callback(init_storage_with_sample_data,
+                                                             self.database)
+                    except Exception as ex:
+                        logging.error("Error in reset resource ({}).".format(ex))
+                        self._write_result(500, token, None, str(ex) if options.debug else None)
+                    else:
+                        self.redirect("/")
+            else:
+                self.redirect("/")
+            return
         if self.get_argument("action", "") == "delete":
             super().check_xsrf_cookie()
             try:

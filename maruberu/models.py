@@ -306,3 +306,32 @@ class BaseBell(object):
     def ring(self, resource: BellResource) -> None:
         """Ring bell and notify result to the resource."""
         raise NotImplementedError
+
+
+async def init_storage_with_sample_data(storage: BaseStorage):
+    samples = {"00000000-0000-0000-0000-000000000000":
+               BellResource(1000, None, None,
+                            uuid="00000000-0000-0000-0000-000000000000"),
+               "11111111-1111-1111-1111-111111111111":
+               BellResource(1000, None, None, sticky=True,
+                            uuid="11111111-1111-1111-1111-111111111111"),
+               "22222222-2222-2222-2222-222222222222":
+               BellResource(1000, None, None, api=True,
+                            uuid="22222222-2222-2222-2222-222222222222"),
+               "33333333-3333-3333-3333-333333333333":
+               BellResource(1000, None, None, sticky=True, api=True,
+                            uuid="33333333-3333-3333-3333-333333333333"),
+               "44444444-4444-4444-4444-444444444444":
+               BellResource(1000, None, None,
+                            uuid="44444444-4444-4444-4444-444444444444",
+                            status=BellResourceStatus.USED),
+               "55555555-5555-5555-5555-555555555555":
+               BellResource(1000, datetime(9999, 12, 31), None,
+                            uuid="55555555-5555-5555-5555-555555555555"), }
+    for k, v in samples.items():
+        c = await storage.get_resource_context(k)
+        async with c:
+            if not c.resource:
+                await storage.create_resource(v)
+            else:
+                c.resource = v

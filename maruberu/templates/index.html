@@ -105,6 +105,9 @@ window.addEventListener("load", function(){
 {% block another_content %}
     {% if items %}
     <h1>サンプルトークン一覧</h1>
+    <form method="post" action="/resource/?action=reset">
+      <input type="submit" value="サンプルトークンをリセット">
+    </form>
     <div>
     {% for x in items %}
       <ul>
