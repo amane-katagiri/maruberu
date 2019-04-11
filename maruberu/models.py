@@ -96,8 +96,8 @@ class BellResource(object):
         self.sticky: bool = sticky
         self.api: bool = api
         self._status: BellResourceStatus = status
-        self.created_at: datetime = created_at or datetime.now(pytz.utc)
-        self.updated_at: datetime = updated_at or datetime.now(pytz.utc)
+        self.created_at: datetime = datetime.fromisoformat(created_at) or datetime.now(pytz.utc)
+        self.updated_at: datetime = datetime.fromisoformat(updated_at) or datetime.now(pytz.utc)
         # not on table
         self._is_before_period: Optional[bool] = None
         self._is_after_period: Optional[bool] = None
