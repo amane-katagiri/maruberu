@@ -5,6 +5,9 @@
 div.container input.first-input {
   margin-top: calc(25vmin - 1em);
 }
+#token {
+  width: 100%;
+}
 {% if resource and resource.is_using() and not msg %}
 @keyframes ringing {
   from {left: -.5em;}
@@ -68,7 +71,7 @@ window.addEventListener("load", function(){
 {% block content %}
   <form>
     {% module xsrf_form_html() %}
-    <input type="text" class="first-input" name="token" value="{% if token %}{{ token }}{% end if %}" autocomplete="off" placeholder="トークンを入力してください">
+    <input type="text" class="first-input" id="token" name="token" value="{% if token %}{{ token }}{% end if %}" autocomplete="off" placeholder="トークンを入力してください">
     <div>
       <input formmethod="get" formaction="/" type="submit" id="open_button" value="開く" onclick="remove_xsrf_token()">
       <input formmethod="post" {% if token %}formaction="/resource/{{ token }}/" {% end if %}type="submit" value="鳴らす{% if resource %} ({{ resource.milliseconds }}ms){% end if %}"{% if not resource or not resource.is_valid() %} disabled{% end if %}>
@@ -100,7 +103,6 @@ window.addEventListener("load", function(){
   </ul>
 {% end %}
 {% block another_content %}
-    <div><a href="/admin/">admin</a></div>
     {% if items %}
     <h1>サンプルトークン一覧</h1>
     <div>

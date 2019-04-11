@@ -10,9 +10,10 @@
     text-align: center;
   }
   div.container {
-    width: calc(50vmin);
-    height: calc(50vmin);
+    min-height: calc(50vmin);
     background-image: url("/static/bell.svg");
+    background-position: center;
+    background-repeat: no-repeat;
     margin: 0 auto;
     text-align: center;
   }
@@ -20,7 +21,7 @@
   div.container form input[type="number"], div.container form input[type="date"],
   div.container form input[type="time"] {
     font-size: 1em;
-    width: 90%;
+    min-width: calc(50vmin);
     height: 2em;
     text-align: center;
     box-sizing: border-box;
@@ -31,7 +32,7 @@
     vertical-align: middle;
   }
   div.container form input[type="date"], div.container form input[type="time"] {
-    width: 45%;
+    min-width: calc(25vmin);
   }
   div.container input[type="submit"] {
     font-size: 1em;
@@ -74,6 +75,9 @@
   <div class="footer">
     <div><small>You can ring your bell on <a href="https://github.com/amane-katagiri/maruberu">github.com:amane-katagiri/maruberu</a></small>.</div>
     <div><small><a href="https://abs.twimg.com/emoji/v2/svg/1f514.svg">:bell: emoji</a> is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> by Twitter, Inc and other contributors.</small></div>
+  </div>
+  <div class="footer">
+    {% block menu %}<div><a href="/admin/">admin</a></div>{% end %}
   </div>
   <script>
 {% block script %}

@@ -42,7 +42,6 @@
   </form>
 {% end %}
 {% block another_content %}
-  <div><a href="/admin/logout/">logout</a></div>
   <h1>トークン一覧</h1>
     <div class="alert">
 {% if new_token and not failed_in_create %}      <div>トークンが発行されました: <a href="/resource/{{ new_token }}">{{ new_token }}</a></div>
@@ -73,3 +72,4 @@
     </tbody>
   </table>
 {% end %}
+{% block menu %}<div><a href="/admin/logout/">logout</a></div>{% end %}
