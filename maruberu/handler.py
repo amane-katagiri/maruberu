@@ -59,7 +59,13 @@ class IndexHandler(BaseRequestHandler):
         token = self.get_argument("token", None)
         resource = None
         if token:
-            c = await self.database.get_resource_context(token)
+            try:
+                c = await self.database.get_resource_context(token)
+            except Exception as ex:
+                logging.error("Error in getting resource '{}' ({}).".format(token, ex))
+                self.set_status(503)
+                self.write_error(503)
+                return
             async with c:
                 resource = c.resource
         self.render("index.html",
@@ -127,7 +133,12 @@ class ResourceHandler(BaseRequestHandler):
 
     async def get(self, token: str) -> None:
         """Render resource page."""
-        c = await self.database.get_resource_context(token)
+        try:
+            c = await self.database.get_resource_context(token)
+        except Exception as ex:
+            logging.error("Error in getting resource '{}' ({}).".format(token, ex))
+            self._write_result(500, token, None, str(ex) if options.debug else None)
+            return
         async with c:
             resource = c.resource
         self._write_result(200 if resource else 404, token, resource)
@@ -147,7 +158,12 @@ class ResourceHandler(BaseRequestHandler):
                 self._write_result(500, token, None, str(ex) if options.debug else None)
         else:
             try:
-                c = await self.database.get_resource_context(token)
+                try:
+                    c = await self.database.get_resource_context(token)
+                except Exception as ex:
+                    logging.error("Error in getting resource '{}' ({}).".format(token, ex))
+                    self._write_result(500, token, None, str(ex) if options.debug else None)
+                    return
                 async with c:
                     resource = c.resource
                     if not resource:
@@ -209,7 +225,13 @@ class AdminTokenHandler(BaseRequestHandler):
     @web.authenticated
     def get(self) -> None:
         """Render resource list page."""
-        items = self.database.get_all_resources()
+        try:
+            items = self.database.get_all_resources()
+        except Exception as ex:
+            logging.error("Error in getting resources ({}).".format(ex))
+            self.set_status(500)
+            self.write_error(500)
+            return
         self.render("generate.html", items=items, new_token=None, old_token=None,
                     failed_in_delete=False, failed_in_create=False)
 
