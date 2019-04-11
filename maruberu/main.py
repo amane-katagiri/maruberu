@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Main module of maruberu."""
 
+import crypt
 import logging
 import pathlib
 
@@ -24,6 +25,7 @@ define("cookie_secret", default="secret", type=str)
 define("ring_command", default="echo", type=str)
 define("admin_username", default="admin", type=str)
 define("admin_password", default="password", type=str)
+define("admin_password_hashed", default="", type=str)
 define("database", default="localhost:6379/0", type=str)
 define("env", default="ON_MEMORY", type=str)
 
@@ -40,6 +42,8 @@ def main() -> None:
     cwd = pathlib.Path(__file__).resolve().parent
     if options.ring_command[:2] == ":/":
         options.ring_command = str(cwd / options.ring_command[2:])
+    if options.admin_password_hashed == "":
+        options.admin_password_hashed = crypt.crypt(options.admin_password)
 
     settings = {
         "xsrf_cookies": True,

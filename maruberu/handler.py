@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """Handler module of maruberu."""
 
+import crypt
 from datetime import datetime
+from hmac import compare_digest as compare_hash
 import logging
 from typing import Optional
 
@@ -28,7 +30,7 @@ class BaseRequestHandler(web.RequestHandler):
     def get_current_user(self) -> Optional[bytes]:
         """Load username from secure cookie."""
         username = self.get_secure_cookie(self.cookie_username)
-        if escape.utf8(username) != escape.utf8(options.admin_username):  # TODO: auth
+        if escape.utf8(username) != escape.utf8(options.admin_username):
             return None
         else:
             return escape.utf8(username)
@@ -211,7 +213,9 @@ class AdminLoginHandler(BaseRequestHandler):
         """Attempt login as admin."""
         username = self.get_argument("username")
         password = self.get_argument("password")
-        if username == options.admin_username and password == options.admin_password:
+        if (username == options.admin_username and
+                compare_hash(crypt.crypt(password, options.admin_password_hashed),
+                             options.admin_password_hashed)):
             self.set_current_user(username)
             self.redirect("/admin/")
         else:
