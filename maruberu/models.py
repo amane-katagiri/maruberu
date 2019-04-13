@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+import logging
 import re
 from typing import Callable, List, Optional, Union
 import uuid
@@ -86,6 +87,7 @@ class BellResource(object):
                  api: bool=False,
                  uuid: Union[str, Callable]=uuid.uuid4,
                  status: BellResourceStatus=BellResourceStatus.UNUSED,
+                 failed_count: int=0,
                  created_at: Optional[datetime]=None,
                  updated_at: Optional[datetime]=None) -> None:
         """Initialize with resource params."""
@@ -97,6 +99,7 @@ class BellResource(object):
         self.sticky: bool = sticky
         self.api: bool = api
         self._status: BellResourceStatus = status
+        self._failed_count: int = failed_count
         self.created_at: datetime = (datetime.fromisoformat(created_at) if created_at else
                                      datetime.now(pytz.utc))
         self.updated_at: datetime = (datetime.fromisoformat(updated_at) if updated_at else
@@ -116,6 +119,7 @@ class BellResource(object):
                    bool(buf["sticky"]), bool(buf["api"]),
                    uuid=str(buf["uuid"]),
                    status=BellResourceStatus[buf["status"]],
+                   failed_count=int(buf["failed_count"]),
                    created_at=buf["created_at"],
                    updated_at=buf["updated_at"])
 
@@ -128,6 +132,7 @@ class BellResource(object):
                "sticky": self.sticky,
                "api": self.api,
                "status": self._status.name,
+               "failed_count": self._failed_count,
                "created_at": self.created_at.isoformat() if self.created_at else None,
                "updated_at": self.updated_at.isoformat() if self.updated_at else None}
         return obj
@@ -203,6 +208,7 @@ class BellResource(object):
         if not self.is_using():
             raise InvalidResourceOperationError
         else:
+            self._failed_count = 0
             if self.sticky and self.is_within_period():
                 self._status = BellResourceStatus.UNUSED
             else:
@@ -213,10 +219,13 @@ class BellResource(object):
         if not self.is_using():
             raise InvalidResourceOperationError
         else:
+            self._failed_count += 1
             if not self.is_within_period():
                 self._status = BellResourceStatus.USED
             else:
                 self._status = BellResourceStatus.UNUSED
+            if self._failed_count >= 3:
+                logging.error("'{}' was failed {} times.".format(self.uuid, self._failed_count))
 
 
 class DataBaseAddress(object):
