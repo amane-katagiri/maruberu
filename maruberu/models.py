@@ -119,10 +119,10 @@ class BellResource(object):
                    if buf["not_before"] else None,
                    datetime.fromisoformat(buf["not_after"])
                    if buf["not_after"] else None,
-                   bool(buf["sticky"]), bool(buf["api"]),
+                   bool(buf.get("sticky", False)), bool(buf.get("api", False)),
                    uuid=str(buf["uuid"]),
                    status=BellResourceStatus[buf["status"]],
-                   failed_count=int(buf["failed_count"]),
+                   failed_count=int(buf.get("failed_count", 0)),
                    created_at=buf["created_at"],
                    updated_at=buf["updated_at"])
 
