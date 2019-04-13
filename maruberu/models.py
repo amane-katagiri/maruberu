@@ -91,6 +91,9 @@ class BellResource(object):
                  created_at: Optional[datetime]=None,
                  updated_at: Optional[datetime]=None) -> None:
         """Initialize with resource params."""
+        if not_before and not_after and not_before > not_after:
+            raise ValueError("Expected not_before < not_after,\
+ but {}(not_before) > {}(not_after).".format(not_before, not_after))
         # on table
         self.uuid: str = str(uuid() if callable(uuid) else uuid)
         self.milliseconds: int = milliseconds
