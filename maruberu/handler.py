@@ -280,21 +280,24 @@ class AdminTokenHandler(BaseRequestHandler):
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items,
                             new_token=None, old_token=r.uuid,
-                            failed_in_delete=False, failed_in_create=False)
+                            failed_in_delete=False, failed_in_create=False,
+                            tz=datetime.now(pytz.timezone(options.timezone)).strftime("%z"))
             except KeyError as ex:
                 logging.warning(str(ex))
                 token = self.get_argument("token", None)
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items,
                             new_token=None, old_token=token,
-                            failed_in_delete=True, failed_in_create=False)
+                            failed_in_delete=True, failed_in_create=False,
+                            tz=datetime.now(pytz.timezone(options.timezone)).strftime("%z"))
             except Exception as ex:
                 logging.error("Error in deleting resource ({}).".format(ex))
                 token = self.get_argument("token", None)
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items,
                             new_token=None, old_token=token,
-                            failed_in_delete=True, failed_in_create=False)
+                            failed_in_delete=True, failed_in_create=False,
+                            tz=datetime.now(pytz.timezone(options.timezone)).strftime("%z"))
         else:
             milliseconds = self.get_argument("milliseconds")
             not_before_date = self.get_argument("not_before_date")
@@ -320,9 +323,11 @@ class AdminTokenHandler(BaseRequestHandler):
                 await self.database.create_resource(r)
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items, new_token=r.uuid, old_token=None,
-                            failed_in_delete=False, failed_in_create=False)
+                            failed_in_delete=False, failed_in_create=False,
+                            tz=datetime.now(pytz.timezone(options.timezone)).strftime("%z"))
             except Exception as ex:
                 logging.warning(str(ex))
                 items = self.database.get_all_resources()
                 self.render("generate.html", items=items, new_token=None, old_token=None,
-                            failed_in_delete=False, failed_in_create=True)
+                            failed_in_delete=False, failed_in_create=True,
+                            tz=datetime.now(pytz.timezone(options.timezone)).strftime("%z"))
