@@ -9,6 +9,7 @@ import logging
 from typing import Optional
 
 from accept_types import parse_header
+import pytz
 from tornado import escape
 from tornado import ioloop
 from tornado import web
@@ -266,7 +267,8 @@ class AdminTokenHandler(BaseRequestHandler):
             self.write_error(500)
             return
         self.render("generate.html", items=items, new_token=None, old_token=None,
-                    failed_in_delete=False, failed_in_create=False)
+                    failed_in_delete=False, failed_in_create=False,
+                    tz=datetime.now(pytz.timezone(options.timezone)).strftime("%z"))
 
     @web.authenticated
     async def post(self) -> None:

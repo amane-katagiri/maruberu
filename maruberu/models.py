@@ -12,6 +12,7 @@ from typing import Callable, List, Optional, Union
 import uuid
 
 import pytz
+from tornado.options import options
 
 
 class BellResourceStatus(Enum):
@@ -97,8 +98,10 @@ class BellResource(object):
         # on table
         self.uuid: str = str(uuid() if callable(uuid) else uuid)
         self.milliseconds: int = milliseconds
-        self.not_before: Optional[datetime] = not_before
-        self.not_after: Optional[datetime] = not_after
+        self.not_before: Optional[datetime] = (pytz.timezone(options.timezone).localize(not_before)
+                                               if not_before else None)
+        self.not_after: Optional[datetime] = (pytz.timezone(options.timezone).localize(not_after)
+                                              if not_after else None)
         self.sticky: bool = sticky
         self.api: bool = api
         self._status: BellResourceStatus = status
@@ -339,7 +342,7 @@ async def init_storage_with_sample_data(storage: BaseStorage):
                             uuid="44444444-4444-4444-4444-444444444444",
                             status=BellResourceStatus.USED),
                "55555555-5555-5555-5555-555555555555":
-               BellResource(1000, datetime(9999, 12, 31), None,
+               BellResource(1000, datetime(8888, 12, 31), None,
                             uuid="55555555-5555-5555-5555-555555555555"), }
     for k, v in samples.items():
         c = await storage.get_resource_context(k)

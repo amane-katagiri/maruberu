@@ -36,6 +36,7 @@
       <div><input title="ベルの長さ（ミリ秒）" type="number" class="first-input" value=1000 step=1000 min=1000 name="milliseconds"></div>
       <div><input title="使用開始日時" type="date" name="not_before_date"><input title="使用開始日時" type="time" step=1 name="not_before_time"></div>
       <div><input title="使用終了日時" type="date" name="not_after_date"><input title="使用終了日時" type="time" step=1 name="not_after_time"></div>
+      <div>Bell Timezone: <span class="tz">{{ tz }}</span></div>
       <div><label title="有効期限内なら何度でもベルを鳴らせます"><input type="checkbox" name="sticky">何度でも</label><label title="XSRFトークンを確認しません"><input type="checkbox" name="api">BOT用</label></div>
     </div>
     <div><input type="submit" value="発行する"></div>

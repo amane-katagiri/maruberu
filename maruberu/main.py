@@ -6,6 +6,7 @@ import crypt
 import logging
 import pathlib
 
+import pytz
 from tornado import httpserver
 from tornado import ioloop
 from tornado import web
@@ -19,6 +20,7 @@ from .handler import IndexHandler, ResourceHandler
 
 define("conf", default="conf/server.conf", type=str)
 define("debug", default=False, type=bool)
+define("timezone", default="Asia/Tokyo", type=str)
 define("host", default="localhost", type=str)
 define("port", default=8000, type=int)
 define("cookie_secret", default="secret", type=str)
@@ -44,6 +46,12 @@ def main() -> None:
         options.ring_command = str(cwd / options.ring_command[2:])
     if options.admin_password_hashed == "":
         options.admin_password_hashed = crypt.crypt(options.admin_password)
+    try:
+        pytz.timezone(options.timezone)
+    except pytz.exceptions.UnknownTimeZoneError:
+        logging.warning("Timezone '{}' is not found.\
+ 'Asia/Tokyo' will be used.".format(options.timezone))
+        options.timezone = "Asia/Tokyo"
 
     settings = {
         "xsrf_cookies": True,
