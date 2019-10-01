@@ -54,7 +54,7 @@ Or, pull this repository and run `make up`.
 Use `-h` to see all options.
 
 ```
-docker run --rm amane/maruberu -h
+docker run --rm amane/maruberu --help
 ```
 
 ## Licence
